@@ -1,4 +1,3 @@
-import secrets
 from typing import Annotated
 
 import psycopg
@@ -12,7 +11,13 @@ from cinemood.config import Settings
 from cinemood.constraints import InterpretationInvalid, interpret
 from cinemood.embeddings import ProviderUnavailable, embed
 from cinemood.http import RequestSizeLimit
-from cinemood.relaxation import SelectionInvalid, select, suggestions
+from cinemood.relaxation import (
+    SelectionCapacityExceeded,
+    SelectionInvalid,
+    SelectionStore,
+    select,
+    suggestions,
+)
 
 
 class DiscoverRequest(BaseModel):
@@ -29,7 +34,7 @@ class DiscoverRequest(BaseModel):
 def create_app() -> FastAPI:
     app = FastAPI(title="CineMood")
     settings = Settings.from_env()
-    selection_key = secrets.token_bytes(32)
+    selections = SelectionStore()
     app.add_middleware(RequestSizeLimit)
 
     app.mount(
@@ -57,7 +62,7 @@ def create_app() -> FastAPI:
             applied_change = None
             if body.selection is not None:
                 original, interpretation, applied_change = select(
-                    body.selection, body.request, selection_key
+                    body.selection, body.request, selections
                 )
             else:
                 if not has_catalog(settings):
@@ -85,7 +90,7 @@ def create_app() -> FastAPI:
             }
             if not count_candidates(settings, interpretation):
                 offered = (
-                    suggestions(body.request, original, settings, selection_key)
+                    suggestions(body.request, original, settings, selections)
                     if body.selection is None
                     else []
                 )
@@ -125,6 +130,11 @@ def create_app() -> FastAPI:
                     "Supported constraints were checked."
                 ),
             }
+        except SelectionCapacityExceeded as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="Too many pending suggestions. Please try again later.",
+            ) from exc
         except SelectionInvalid as exc:
             raise HTTPException(
                 status_code=400,

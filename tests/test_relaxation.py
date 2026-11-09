@@ -2,6 +2,9 @@
 
 import psycopg
 import pytest
+from fastapi.testclient import TestClient
+
+from cinemood.app import create_app
 
 
 def test_runtime_suggestion_finds_the_nearest_catalog_boundary(
@@ -298,3 +301,107 @@ def test_selection_preserves_context_when_all_compatible_movies_disappear(
     ]
     assert "no longer available" in selected["message"].lower()
     assert "search again" in selected["message"].lower()
+
+
+def test_displayed_alternative_remains_selectable_with_long_valid_interpretation(
+    loaded_client, extraction
+):
+    request = "r" * 2000
+    warnings = ["a" * 2000, "b" * 2000, "c" * 2000]
+    extraction[request] = {
+        "semantic_query": "s" * 2000,
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+        "unsupported_requirements": warnings,
+    }
+    original = loaded_client.post(
+        "/api/recommendations", json={"request": request}
+    ).json()
+    option = original["suggestions"][0]
+    response = loaded_client.post(
+        "/api/recommendations",
+        json={"request": request, "selection": option["selection"]},
+    )
+    assert response.status_code == 200
+    selected = response.json()
+    assert [m["source_id"] for m in selected["movies"]] == ["fixture:river"]
+    assert selected["original_request"] == request
+    assert selected["interpretation"]["unsupported_requirements"] == warnings
+    assert selected["interpretation"]["runtime_minutes"] == 89
+
+
+def test_selection_token_size_is_independent_of_unicode_request_and_warning_lengths(
+    loaded_client, extraction
+):
+    request = "🎬" * 2000
+    warnings = [f"Unknown fact {i}:".ljust(2000, "x") for i in range(10)]
+    extraction[request] = {
+        "semantic_query": "movie",
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+        "unsupported_requirements": warnings,
+    }
+    response = loaded_client.post("/api/recommendations", json={"request": request})
+    assert response.status_code == 200
+    option = response.json()["suggestions"][0]
+    assert len(option["selection"]) == 43
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={"request": request, "selection": option["selection"]},
+    )
+    assert selected.status_code == 200
+    assert selected.json()["interpretation"]["unsupported_requirements"] == warnings
+    assert [m["source_id"] for m in selected.json()["movies"]] == ["fixture:river"]
+
+
+def test_pending_selection_capacity_is_atomic_and_preserves_displayed_options(
+    loaded_client, extraction
+):
+    # The documented store limit is 128 pending displayed options for 15 minutes.
+    extraction["quiet comfort"] = {"original_language": "de"}
+    first_token = None
+    for _ in range(127):
+        response = loaded_client.post(
+            "/api/recommendations", json={"request": "quiet comfort"}
+        )
+        assert response.status_code == 200
+        if first_token is None:
+            first_token = response.json()["suggestions"][0]["selection"]
+    # Two genre alternatives need two slots; only one is available.
+    extraction["both genres"] = {"included_genres": ["Drama", "Comedy", "Adventure"]}
+    rejected = loaded_client.post(
+        "/api/recommendations", json={"request": "both genres"}
+    )
+    assert rejected.status_code == 503
+    assert "pending" in rejected.json()["detail"].lower()
+    # Failed reservation did not consume the remaining slot.
+    last = loaded_client.post("/api/recommendations", json={"request": "quiet comfort"})
+    assert last.status_code == 200
+    full = loaded_client.post("/api/recommendations", json={"request": "quiet comfort"})
+    assert full.status_code == 503
+    # Previously displayed alternatives are not evicted to make room.
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={"request": "quiet comfort", "selection": first_token},
+    )
+    assert selected.status_code == 200
+    assert len(selected.json()["movies"]) == 3
+
+
+def test_selection_from_a_previous_app_instance_requires_a_new_search(
+    loaded_client, extraction
+):
+    extraction["quiet comfort"] = {"original_language": "de"}
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "quiet comfort"}
+    ).json()
+    with TestClient(create_app()) as restarted:
+        response = restarted.post(
+            "/api/recommendations",
+            json={
+                "request": "quiet comfort",
+                "selection": data["suggestions"][0]["selection"],
+            },
+        )
+    assert response.status_code == 400
+    assert "search again" in response.json()["detail"].lower()

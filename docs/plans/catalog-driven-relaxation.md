@@ -81,10 +81,12 @@ vector-index change, schema migration, external service or model call is needed.
 The existing exact vector ranking runs only after selection with the preserved
 semantic query.
 
-The current selection token stores an index into a fixed change list. Because
-catalog-derived changes can move when the catalog changes, the new token must
-bind the exact displayed change (original interpretation, field/value and
-request), not an index recomputed against current data. Authenticate it, validate
+Catalog-derived changes can move when the catalog changes. The selection token
+must bind the exact displayed change (original interpretation, field/value and
+request), not an index recomputed against current data. The closure audit replaced
+the self-contained signed payload with a fixed-size opaque reference to bounded
+server-side state, avoiding oversized tokens for valid long interpretations.
+See `../constraints.md` for expiry, capacity, and the single-process boundary. Validate
 that exactly one allowed restriction changed and exclusions did not, and retain
 expiry. Recheck eligibility on selection. If no candidates remain, report that
 this displayed option is no longer available and ask for a new search; never

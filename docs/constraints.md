@@ -101,11 +101,21 @@ no candidates remain, report that the displayed option is no longer available
 and ask for a new search. Do not substitute a newly computed bound.
 The original request and restrictions remain in the response and UI.
 
-Tokens expire after 15 minutes and use an ephemeral per-application signing key.
-Tampering, a different request, expiry or application restart returns `400` and
-asks for a new search. This is deliberately a single-process demo; multiple
-workers/replicas would need shared key configuration or durable selection state.
-The token is authenticated, not encrypted, and is not a visitor identity.
+Tokens are 43-character opaque identifiers with 256 bits of random entropy;
+request/interpretation text is kept in bounded per-application memory rather than
+encoded into the token. Thus a displayed option remains selectable even with a
+maximum-length Unicode request or long unchecked-requirement descriptions.
+Each stored selection binds the original request and exact field/value and is
+validated again before use. Client-supplied revised filters are still forbidden.
+
+Selections expire after 15 minutes or an application restart. A locked store
+holds at most 128 pending displayed options; expired entries are pruned lazily.
+Complete responses reserve their slots atomically. Capacity exhaustion returns
+safe `503` feedback asking the visitor to retry; it never silently evicts an
+unexpired option already displayed. This is deliberately a single-process demo;
+multiple workers/replicas would need shared selection storage. Invalid, expired,
+wrong-request or previous-instance tokens return `400` and ask for a new search.
+The token is a bearer reference to a proposed change, not a visitor identity.
 
 ## SQL and verification
 

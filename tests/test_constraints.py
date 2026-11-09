@@ -219,7 +219,7 @@ def test_selection_cannot_apply_forged_or_unshown_changes(
     if tamper == "signature":
         token += "0"
     elif tamper == "payload":
-        token = "A" + token[1:]
+        token = ("A" if token[0] != "A" else "B") + token[1:]
     elif tamper == "request":
         request = "a different request"
     else:

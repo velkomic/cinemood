@@ -1,17 +1,14 @@
 """Bounded catalog probes and authenticated, explicit single-change selection."""
 
-import base64
-import binascii
-import hashlib
-import hmac
-import json
+import secrets
+import threading
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
 import psycopg
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict
 
 from cinemood.catalog import candidate_summary, connect
 from cinemood.config import Settings
@@ -29,6 +26,47 @@ class Selection(BaseModel):
     field: str
     value: int | list[str] | None
     expires: int
+
+
+class SelectionCapacityExceeded(Exception):
+    pass
+
+
+class SelectionStore:
+    """Bounded per-app state; tokens reveal no request or interpretation text."""
+
+    def __init__(self) -> None:
+        self._pending: dict[str, Selection] = {}
+        self._lock = threading.Lock()
+
+    def _prune(self) -> None:
+        now = time.time()
+        self._pending = {
+            token: item for token, item in self._pending.items() if item.expires > now
+        }
+
+    def issue(self, selections: list[Selection]) -> list[str]:
+        with self._lock:
+            self._prune()
+            # Reserve the complete response atomically. Never evict a live option.
+            if len(self._pending) + len(selections) > 128:
+                raise SelectionCapacityExceeded
+            tokens: list[str] = []
+            for item in selections:
+                token = secrets.token_urlsafe(32)
+                while token in self._pending:
+                    token = secrets.token_urlsafe(32)
+                self._pending[token] = item.model_copy(deep=True)
+                tokens.append(token)
+            return tokens
+
+    def get(self, token: str, request: str) -> Selection:
+        with self._lock:
+            self._prune()
+            selection = self._pending.get(token)
+            if selection is None or selection.request != request:
+                raise SelectionInvalid
+            return selection.model_copy(deep=True)
 
 
 @dataclass(frozen=True)
@@ -75,9 +113,13 @@ def apply(original: Interpretation, change: ConstraintChange) -> Interpretation:
 
 
 def suggestions(
-    request: str, original: Interpretation, settings: Settings, key: bytes
+    request: str,
+    original: Interpretation,
+    settings: Settings,
+    selections: SelectionStore,
 ) -> list[dict[str, object]]:
     offered: list[dict[str, object]] = []
+    pending: list[Selection] = []
     seen: set[tuple[int, ...]] = set()
     with connect(settings) as conn:
         # Every boundary and count describes the same catalog snapshot.
@@ -88,7 +130,7 @@ def suggestions(
             if not candidates or candidates in seen:
                 continue
             seen.add(candidates)
-            payload = (
+            pending.append(
                 Selection(
                     request=request,
                     original=original,
@@ -96,22 +138,19 @@ def suggestions(
                     value=change.value,
                     expires=int(time.time()) + 900,
                 )
-                .model_dump_json()
-                .encode()
             )
-            encoded = base64.urlsafe_b64encode(payload).decode()
-            signature = hmac.new(key, encoded.encode(), hashlib.sha256).hexdigest()
             offered.append(
                 {
                     "field": change.field,
                     "label": validate_and_describe_change(original, revised),
                     "candidate_count": len(candidates),
                     "interpretation": revised.model_dump(),
-                    "selection": f"{encoded}.{signature}",
                 }
             )
             if len(offered) == 3:
                 break
+    for option, token in zip(offered, selections.issue(pending), strict=True):
+        option["selection"] = token
     return offered
 
 
@@ -169,21 +208,11 @@ def validate_and_describe_change(
 
 
 def select(
-    token: str, request: str, key: bytes
+    token: str, request: str, selections: SelectionStore
 ) -> tuple[Interpretation, Interpretation, str]:
-    try:
-        encoded, signature = token.split(".")
-        expected = hmac.new(key, encoded.encode(), hashlib.sha256).hexdigest()
-        if not hmac.compare_digest(signature.encode(), expected.encode()):
-            raise SelectionInvalid
-        payload = base64.b64decode(encoded, altchars=b"-_", validate=True)
-        selection = Selection.model_validate(json.loads(payload))
-        if selection.request != request or selection.expires <= time.time():
-            raise SelectionInvalid
-        revised = apply(
-            selection.original, ConstraintChange(selection.field, selection.value)
-        )
-        label = validate_and_describe_change(selection.original, revised)
-        return selection.original, revised, label
-    except (ValueError, ValidationError, binascii.Error) as exc:
-        raise SelectionInvalid from exc
+    selection = selections.get(token, request)
+    revised = apply(
+        selection.original, ConstraintChange(selection.field, selection.value)
+    )
+    label = validate_and_describe_change(selection.original, revised)
+    return selection.original, revised, label
