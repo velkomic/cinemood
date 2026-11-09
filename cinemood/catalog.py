@@ -7,6 +7,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from cinemood.config import DIMENSIONS, DOCUMENT_VERSION, MODEL, Settings
+from cinemood.constraints import Interpretation
 from cinemood.embeddings import embed, vector_literal
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -146,17 +147,61 @@ def has_catalog(settings: Settings) -> bool:
         )
 
 
-def retrieve(settings: Settings, vector: list[float]) -> list[dict[str, Any]]:
+def eligible_filter(
+    settings: Settings, constraints: Interpretation
+) -> tuple[str, tuple[object, ...]]:
+    # Only this fixed operator is interpolated; every visitor/model value is bound.
+    runtime_operator = "<" if constraints.runtime_operator == "lt" else "<="
+    predicate = f"""
+        e.model = %s AND e.dimensions = %s AND e.document_version = %s
+        AND e.provider_fingerprint = %s
+        AND (%s::integer IS NULL OR m.runtime_minutes {runtime_operator} %s)
+        AND (%s::integer IS NULL OR m.release_year >= %s)
+        AND (%s::integer IS NULL OR m.release_year <= %s)
+        AND (%s::text IS NULL OR m.original_language = %s)
+        AND NOT EXISTS (
+            SELECT 1 FROM unnest(%s::text[]) wanted(name)
+            WHERE NOT EXISTS (
+                SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
+                WHERE mg.movie_id = m.id AND g.name = wanted.name))
+        AND NOT EXISTS (
+            SELECT 1 FROM movie_genres mg JOIN genres g ON g.id = mg.genre_id
+            WHERE mg.movie_id = m.id AND g.name = ANY(%s::text[]))
+        AND (%s::boolean = false OR EXISTS (
+            SELECT 1 FROM movie_genres mg WHERE mg.movie_id = m.id))
+    """
+    return predicate, (
+        MODEL,
+        DIMENSIONS,
+        DOCUMENT_VERSION,
+        settings.provider_fingerprint,
+        constraints.runtime_minutes,
+        constraints.runtime_minutes,
+        constraints.year_min,
+        constraints.year_min,
+        constraints.year_max,
+        constraints.year_max,
+        constraints.original_language,
+        constraints.original_language,
+        constraints.included_genres,
+        constraints.excluded_genres,
+        bool(constraints.included_genres or constraints.excluded_genres),
+    )
+
+
+def retrieve(
+    settings: Settings, vector: list[float], constraints: Interpretation
+) -> list[dict[str, Any]]:
+    predicate, params = eligible_filter(settings, constraints)
     with connect(settings) as conn:
         rows = conn.execute(
-            """
+            f"""
             WITH selected AS (
                 SELECT m.id, m.source_id, m.title, m.release_year,
                        m.runtime_minutes, m.overview,
                        e.embedding <=> %s::vector AS distance
                 FROM movies m JOIN movie_embeddings e ON e.movie_id = m.id
-                WHERE e.model = %s AND e.dimensions = %s AND e.document_version = %s
-                  AND e.provider_fingerprint = %s
+                WHERE {predicate}
                 ORDER BY distance, m.id LIMIT 3
             )
             SELECT s.id, s.source_id, s.title, s.release_year,
@@ -166,12 +211,18 @@ def retrieve(settings: Settings, vector: list[float]) -> list[dict[str, Any]]:
                              WHERE mg.movie_id = s.id), ARRAY[]::text[]) AS genres
             FROM selected s ORDER BY s.distance, s.id
             """,
-            (
-                vector_literal(vector),
-                MODEL,
-                DIMENSIONS,
-                DOCUMENT_VERSION,
-                settings.provider_fingerprint,
-            ),
+            (vector_literal(vector), *params),
         ).fetchall()
         return list(rows)
+
+
+def count_candidates(settings: Settings, constraints: Interpretation) -> int:
+    predicate, params = eligible_filter(settings, constraints)
+    with connect(settings) as conn:
+        row = conn.execute(
+            f"""SELECT count(*) AS total FROM movies m
+                JOIN movie_embeddings e ON e.movie_id = m.id WHERE {predicate}""",
+            params,
+        ).fetchone()
+        assert row is not None
+        return int(row["total"])

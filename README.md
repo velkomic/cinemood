@@ -3,8 +3,8 @@
 A small semantic movie discovery demo: FastAPI serves Discover and a REST API;
 PostgreSQL/pgvector stores catalog facts and performs exact cosine retrieval.
 Load the four **fictional CC0 films** for an independent fixture demo, or use the
-[bounded, resumable TMDB importer](docs/ingestion.md) for real movies. Hard
-constraints, generated explanations, and collections belong to later tickets.
+[bounded, resumable TMDB importer](docs/ingestion.md) for real movies. [Interpreted restrictions and explicit no-match alternatives](docs/constraints.md)
+are supported; generated explanations and collections belong to later tickets.
 
 ## Start from a clean checkout
 
@@ -23,7 +23,9 @@ docker compose exec app python -m cinemood load-fixtures --limit 4
 
 Open <http://localhost:8000> and enter a mood or theme. Loading four films sends
 one batch of at most four short documents to `text-embedding-3-small`, at 1,536
-dimensions. Each search embeds one request. There are no model retries; network
+dimensions. Each new search makes one structured interpretation call and embeds its mood/theme
+query only when SQL-eligible movies exist. Explicit relaxation selection reuses
+the interpretation. There are no model retries; network
 operations time out after 15 seconds. The fixture loader never fetches TMDB data.
 Without a key, the app still starts, `/health` works, and Discover reports an
 empty catalog; loading requires a configured provider and exits with a useful
@@ -59,13 +61,18 @@ start/stop it while preserving its database and raw snapshots.
 - Empty compatible catalog: `200`, empty movies, and an actionable message.
 - Blank, non-string, missing, or over-2,000-character requests: `422`.
   HTTP bodies over 16 KiB, including chunked bodies: `413`.
-- Missing/unavailable embedding provider or database/query failure: `503`
+- Missing/unavailable interpretation or embedding provider or database/query failure: `503`
   with safe `detail`; no recommendations are claimed.
 - `GET /health`: checks the database connection, not paid provider availability.
 
+The response shows the interpreted restrictions. Invalid/ambiguous interpretations
+and unsupported factual requirements stop search with a clarification state.
+Zero eligible movies can return up to three explicit optional changes. See the
+[constraint API contract and SQL policy](docs/constraints.md) for response fields,
+strict/inclusive boundaries, selection tokens, and supported limits.
+
 Similarity ranking is not a confidence score. A small catalog can produce weak
-matches; no arbitrary similarity cutoff is applied. This slice does not parse
-or enforce natural-language factual restrictions.
+matches; no arbitrary similarity cutoff is applied.
 
 ## Develop and verify
 
@@ -91,6 +98,7 @@ docker run --rm -d --name cinemood-test-db \
 # Wait for: docker exec cinemood-test-db pg_isready -U cinemood
 export TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55432/postgres
 uv run python -m pytest tests/test_discover.py -q
+uv run python -m pytest tests/test_constraints.py -q
 uv run python -m pytest tests/test_fixture_command.py -q
 uv run python -m pytest tests/test_ingestion_command.py -q
 uv run python -m pytest -q

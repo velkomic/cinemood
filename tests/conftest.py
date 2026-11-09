@@ -8,7 +8,7 @@ from http.server import ThreadingHTTPServer
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
-from provider_stub import EmbeddingHandler
+from provider_stub import OpenAIHandler
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
@@ -17,7 +17,7 @@ from cinemood.app import create_app
 
 @pytest.fixture(scope="session")
 def provider_url():
-    server = ThreadingHTTPServer(("127.0.0.1", 0), EmbeddingHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), OpenAIHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     yield f"http://127.0.0.1:{server.server_port}/v1"

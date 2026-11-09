@@ -4,9 +4,74 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
-class EmbeddingHandler(BaseHTTPRequestHandler):
+class OpenAIHandler(BaseHTTPRequestHandler):
+    interpretations = {}
+    calls = []
+
     def do_POST(self):
+        self.calls.append(self.path)
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        if "messages" in body:
+            request = body["messages"][-1]["content"]
+            interpretation = {
+                "semantic_query": request,
+                "included_genres": [],
+                "excluded_genres": [],
+                "runtime_minutes": None,
+                "runtime_operator": None,
+                "year_min": None,
+                "year_max": None,
+                "original_language": None,
+                "unsupported_requirements": [],
+                "clarification": [],
+            }
+            if request == "quiet comfort under 92 minutes":
+                interpretation.update(runtime_minutes=92, runtime_operator="lt")
+            overrides = dict(self.interpretations.get(request, {}))
+            http_status = overrides.pop("_http_status", None)
+            if http_status:
+                self.send_response(http_status)
+                self.end_headers()
+                self.wfile.write(b'{"error":{"message":"fixture extraction outage"}}')
+                return
+            omit = overrides.pop("_omit", None)
+            refusal = overrides.pop("_refusal", None)
+            finish_reason = overrides.pop("_finish_reason", "stop")
+            content = overrides.pop("_content", None)
+            interpretation.update(overrides)
+            if omit:
+                interpretation.pop(omit)
+            content = content if content is not None else json.dumps(interpretation)
+            result = json.dumps(
+                {
+                    "id": "chat-fixture",
+                    "object": "chat.completion",
+                    "created": 1,
+                    "model": body["model"],
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {
+                                "role": "assistant",
+                                "content": content,
+                                "refusal": refusal,
+                            },
+                            "finish_reason": finish_reason,
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": 10,
+                        "completion_tokens": 10,
+                        "total_tokens": 20,
+                    },
+                }
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(result)))
+            self.end_headers()
+            self.wfile.write(result)
+            return
         inputs = body["input"]
         if isinstance(inputs, str):
             inputs = [inputs]
@@ -54,4 +119,4 @@ class EmbeddingHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    ThreadingHTTPServer(("127.0.0.1", 18080), EmbeddingHandler).serve_forever()
+    ThreadingHTTPServer(("127.0.0.1", 18080), OpenAIHandler).serve_forever()
