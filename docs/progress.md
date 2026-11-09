@@ -2,7 +2,7 @@
 
 ## Active milestone
 
-T2 ([#3: Search a bounded, resumable TMDB catalog](https://github.com/velkomic/cinemood/issues/3)) is complete locally: implementation, independent review, 52 integration tests, and the full 1,000-movie live catalog load and Discover checks are verified. Only this slice is in scope. The T1 blocker is closed. Detailed evidence, runtime location, and remaining later-milestone limitations are recorded below.
+T2 ([#3: Search a bounded, resumable TMDB catalog](https://github.com/velkomic/cinemood/issues/3)) is complete, accepted by the owner, and closed on GitHub. Implementation, independent review, 52 integration tests, and the full 1,000-movie live catalog load and Discover checks are verified. Only this slice is in scope. The T1 blocker is closed. Detailed evidence, runtime location, and remaining later-milestone limitations are recorded below.
 
 T1 complete, published, and closed with accepted local verification: [Discover movies from a small local semantic catalog](https://github.com/velkomic/cinemood/issues/2). All 25 integration tests, Compose startup/retrieval, and deterministic plus live-OpenAI browser demonstrations passed. Standards and Spec reviews found no required code changes. The user accepted local verification instead of requiring a hosted GitHub Actions run; the workflow remains configured.
 
@@ -51,7 +51,7 @@ T1 complete, published, and closed with accepted local verification: [Discover m
 
 ## Next step
 
-T2 (#3) has reached its full 1,000-movie target and is ready for closure. Implementation, independent review, deterministic integration tests, and live full-load/search verification are complete; the published issue remains open and no push or tracker update is claimed. The retained real catalog is available at `http://localhost:58000`; use `compose.catalog.yaml` and project name `cinemood-t2-live` to reuse its volumes. T3 (#4) and T5 (#6) are available for later implementation sessions. The 20-request relevance evaluation, explanations, collections, and AWS remain in their own slices.
+T2 (#3) is closed as completed, with all acceptance criteria checked and a completion comment recording verification and limitations. Implementation, independent review, deterministic integration tests, and live full-load/search verification are complete. The implementation/evidence commits remain local; no push or hosted CI pass is claimed. The retained real catalog is available at `http://localhost:58000`; use `compose.catalog.yaml` and project name `cinemood-t2-live` to reuse its volumes. Recommended next ticket: T3 (#4), Interpret constraints and offer no-match alternatives, in a fresh chat. T5 (#6) is also independently available. The 20-request relevance evaluation, explanations, collections, and AWS remain in their own slices.
 
 ## Session handoff
 
@@ -97,3 +97,9 @@ The repository documentation and published ticket are the durable context; the p
 - Added and validated `compose.catalog.yaml` so the retained real catalog can restart without a temporary override. It is running at **http://localhost:58000**; the original fixture demo on port 8000 uses separate volumes and was not modified. Restart/stop commands and volume names are documented in `docs/ingestion.md`.
 - Ruff lint/format, strict mypy, Compose configuration validation and git whitespace checks passed. The earlier **52 passing integration tests** remain the correctness evidence; no application source changed and no additional test suite rerun or hosted CI pass is claimed. Session artifacts: `/tmp/cinemood-full-load.jsonl`, `/tmp/cinemood-full-catalog-audit.json`, `/tmp/cinemood-full-catalog-verification.json`, `/tmp/cinemood-full-catalog-desktop.png`, `/tmp/cinemood-full-catalog-mobile.png` (not committed).
 - This continuation made 995 new document-embedding requests and two query-embedding requests, with no model retries. Combined with the initial five-movie verification, T2 has 1,000 document embeddings and 1,052 TMDB requests. Actual provider tokens/billing were not metered. No generation, S3, AWS provisioning, scheduling activation, or later-ticket implementation occurred.
+
+## T2 acceptance and tracker closure — 2026-11-09
+
+- The owner confirmed that the catalog works and explicitly requested closure. Refetched `velkomic/cinemood` issue #3, posted the completion evidence and limitations, checked all five acceptance criteria, and closed it with state reason `completed`. The returned GitHub issue state confirmed closure.
+- Completion comment: https://github.com/velkomic/cinemood/issues/3#issuecomment-6748648910. It distinguishes local commits/checks from unpublished code and does not claim a hosted CI pass or metered billing.
+- No other ticket was changed. Start #4 in a fresh implementation chat, reading this handoff and the full published ticket first. The catalog remains available on port 58000; secrets and snapshots remain outside git.
