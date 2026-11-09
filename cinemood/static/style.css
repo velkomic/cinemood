@@ -1,0 +1,27 @@
+:root { color-scheme: dark; font-family: system-ui, sans-serif; color: #ede8df; background: #171e20; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: inherit; }
+header { padding: 26px 6vw; border-bottom: 1px solid #394143; }
+.brand { text-decoration: none; font-weight: 750; font-size: 22px; }
+.brand span { font-size: 12px; font-weight: 400; color: #aeb7b4; margin-left: 16px; }
+main { max-width: 1160px; margin: 0 auto; padding: 52px 28px; }
+.eyebrow, .number { color: #bdce97; letter-spacing: .16em; font-size: 11px; }
+h1 { font-family: Georgia, serif; font-size: clamp(44px, 7vw, 78px); font-weight: 400; letter-spacing: -.04em; line-height: 1.05; margin: 20px 0; }
+.intro { color: #c2c9c6; margin-bottom: 32px; }
+form { max-width: 720px; }
+label { display: block; font-size: 13px; margin-bottom: 10px; }
+textarea { display: block; resize: vertical; width: 100%; padding: 18px; font: inherit; line-height: 1.5; background: #222c2e; color: #ede8df; border: 1px solid #596260; border-radius: 6px; }
+textarea:focus { outline: 2px solid #bdce97; outline-offset: 3px; }
+button { margin-top: 14px; background: #bdce97; color: #19211d; border: 0; border-radius: 4px; padding: 14px 22px; font: inherit; font-weight: 650; cursor: pointer; }
+button span { margin-left: 32px; }
+button:disabled { opacity: .5; cursor: wait; }
+.scope { color: #aeb7b4; font-size: 12px; max-width: 650px; line-height: 1.6; }
+#status { margin: 36px 0 18px; color: #cbd4c8; font-size: 14px; }
+#results { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+article { padding: 24px; background: #222c2e; border-top: 2px solid #bdce97; border-radius: 3px; }
+h2 { font-family: Georgia, serif; font-weight: 400; font-size: 26px; }
+article p { font-size: 14px; line-height: 1.7; color: #c2c9c6; }
+article .facts { font-size: 12px; color: #bdce97; }
+footer { padding: 24px 6vw; border-top: 1px solid #394143; color: #aeb7b4; font-size: 12px; }
+@media (max-width: 600px) { .brand span { display: block; margin: 6px 0 0; } main { padding: 32px 20px; } }

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CineMood · Discover</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/discover.js" defer></script>
+</head>
+<body>
+  <header><a href="/" class="brand">CineMood<span> / a small discovery experiment</span></a></header>
+  <main>
+    <p class="eyebrow">DISCOVER</p>
+    <h1>A story for<br>your state of mind.</h1>
+    <p class="intro">Describe the mood, theme, or experience you’re looking for.</p>
+    <form id="discover">
+      <label for="request">What would you like to watch?</label>
+      <textarea id="request" name="request" maxlength="2000" required rows="3"
+        placeholder="Something gentle about friendship and starting over…"></textarea>
+      <button type="submit">Find movies <span aria-hidden="true">↗</span></button>
+    </form>
+    <p class="scope">This demo searches four fictional films. Hard constraints are not checked and explanations are not generated yet.</p>
+    <p id="status" role="status" aria-live="polite">Your next story starts with a request.</p>
+    <section id="results" aria-label="Movie matches" aria-busy="false"></section>
+  </main>
+  <footer>Original fictional catalog · <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a> · Semantic discovery with PostgreSQL &amp; pgvector</footer>
+</body>
+</html>

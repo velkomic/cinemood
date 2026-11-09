@@ -1,0 +1,38 @@
+[
+  {
+    "source_id": "fixture:lantern",
+    "title": "The Lantern Kitchen",
+    "release_year": 2021,
+    "original_language": "en",
+    "runtime_minutes": 92,
+    "genres": ["Comedy", "Drama"],
+    "overview": "A tired cook opens a tiny neighborhood kitchen. Shared meals and gentle humor help old friends reconnect."
+  },
+  {
+    "source_id": "fixture:garden",
+    "title": "Garden Letters",
+    "release_year": 2019,
+    "original_language": "fr",
+    "runtime_minutes": 105,
+    "genres": ["Drama", "Romance"],
+    "overview": "Two neighbors exchange letters across a shared garden, finding friendship and hope after years of loneliness."
+  },
+  {
+    "source_id": "fixture:river",
+    "title": "River Workshop",
+    "release_year": 2023,
+    "original_language": "en",
+    "runtime_minutes": 88,
+    "genres": ["Adventure", "Drama"],
+    "overview": "An apprentice and a retired boat builder restore a river ferry, learning trust as they navigate an unexpected storm."
+  },
+  {
+    "source_id": "fixture:orbital",
+    "title": "Orbital Rescue",
+    "release_year": 2020,
+    "original_language": "en",
+    "runtime_minutes": 118,
+    "genres": ["Science Fiction", "Thriller"],
+    "overview": "A spacecraft engineer races against failing oxygen to rescue a stranded orbital crew, solving dangerous mechanical puzzles."
+  }
+]
