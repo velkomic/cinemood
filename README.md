@@ -44,6 +44,13 @@ docker compose down
 `.env`. Changing the embedding provider endpoint, model, dimensions, or document
 version requires reloading compatible catalog embeddings.
 
+## Retained real catalog
+
+The completed 1,000-movie TMDB catalog is served at <http://localhost:58000> under
+the `cinemood-t2-live` Compose project. The fixture demo on port 8000 is separate.
+See [retained-catalog commands](docs/ingestion.md#retained-local-catalog) to
+start/stop it while preserving its database and raw snapshots.
+
 ## API contract
 
 - `POST /api/recommendations`, JSON `{"request":"..."}`: `200` with `movies`

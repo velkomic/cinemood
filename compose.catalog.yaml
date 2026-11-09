@@ -1,0 +1,6 @@
+# Full TMDB catalog, retained under the cinemood-t2-live Compose project.
+# Use with: docker compose -p cinemood-t2-live -f compose.yaml -f compose.catalog.yaml
+services:
+  app:
+    ports: !override
+      - '127.0.0.1:58000:8000'

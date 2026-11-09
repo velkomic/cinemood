@@ -151,3 +151,26 @@ from TMDB's attribution page on 2026-11-09. The logo links to TMDB and is less
 prominent than CineMood branding. Source asset:
 `https://www.themoviedb.org/assets/v4/logos/v2/blue_short-8e7b30f73a4020692ccca9c88bafe5dcb6f8a62a4c6bc55cd9ba82bb2cd95f6c.svg`.
 See the [official attribution requirements](https://developer.themoviedb.org/docs/faq).
+
+## Retained local catalog
+
+The T2 live catalog uses the retained `cinemood-t2-live` Compose project and
+port **58000**. It resumes the original five-movie verification catalog instead
+of paying to re-embed those movies in another database. The original fixture
+demo on port 8000 uses separate volumes.
+
+```bash
+# Start or resume the retained catalog using a committed port override.
+docker compose -p cinemood-t2-live -f compose.yaml -f compose.catalog.yaml up -d --wait
+# Run one bounded acquisition batch; repeat only while status is incomplete.
+docker compose -p cinemood-t2-live -f compose.yaml -f compose.catalog.yaml exec -T app \
+  python -m cinemood ingest-tmdb --target 1000 --max-pages 5 --max-requests 150
+# Stop while keeping both database and raw snapshots.
+docker compose -p cinemood-t2-live -f compose.yaml -f compose.catalog.yaml down
+```
+
+Discover is at <http://localhost:58000>. Keep the project name unchanged to reuse
+`cinemood-t2-live_postgres-data` and `cinemood-t2-live_tmdb-snapshots`. Avoid
+`down --volumes` unless deliberately deleting the acquired catalog and snapshots.
+Actual completed counts and source limitations are recorded in
+[progress](progress.md).
