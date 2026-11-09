@@ -392,3 +392,39 @@ def test_catalog_copy_and_tmdb_credits_are_visible(client):
             "message"
         ]
     )
+
+
+def test_changed_embedding_provider_requires_reindex_without_tmdb_fetch(
+    client, tmdb, monkeypatch, provider_url
+):
+    assert ingest().returncode == 0
+    tmdb["calls"].clear()
+    monkeypatch.setenv("OPENAI_BASE_URL", provider_url.replace("/v1", "/alternate"))
+    # A restarted app now queries the new provider's embedding space.
+    from fastapi.testclient import TestClient
+
+    from cinemood.app import create_app
+
+    with TestClient(create_app()) as restarted:
+        assert (
+            restarted.post("/api/recommendations", json={"request": "comfort"}).json()[
+                "movies"
+            ]
+            == []
+        )
+        incompatible = ingest()
+        assert incompatible.returncode == 1
+        assert "--reindex" in incompatible.stderr
+        repaired = ingest("--reindex")
+        assert repaired.returncode == 0, repaired.stderr
+        assert json.loads(repaired.stdout)["embedded"] == 1
+        assert json.loads(repaired.stdout)["requests"] == 0
+        assert (
+            restarted.post("/api/recommendations", json={"request": "comfort"}).json()[
+                "movies"
+            ][0]["source_id"]
+            == "tmdb:101"
+        )
+        monkeypatch.delenv("OPENAI_API_KEY")
+        assert json.loads(ingest().stdout)["requests"] == 0
+    assert tmdb["calls"] == []

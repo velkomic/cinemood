@@ -1,6 +1,6 @@
 # CineMood
 
-Status: product interview and specification review complete. The specification and six implementation tickets are published; see `SPEC.md` and `plans/MVP.md`. T1 is implemented and accepted with real PostgreSQL/pgvector, deterministic integration tests, and a bounded live OpenAI embedding/browser check. The user accepted local verification instead of a required hosted CI run; GitHub Actions remains configured. See `progress.md` for evidence and limitations.
+Status: product interview and specification review complete. The specification and six implementation tickets are published; see `SPEC.md` and `plans/MVP.md`. T1 is implemented and accepted with real PostgreSQL/pgvector, deterministic integration tests, and a bounded live OpenAI embedding/browser check. The user accepted local verification instead of a required hosted CI run; GitHub Actions remains configured. T2 is implemented with deterministic ingestion/API verification; bounded live TMDB verification remains pending a Read Access Token. See `progress.md` for evidence and limitations.
 
 ## Agreed constraints
 

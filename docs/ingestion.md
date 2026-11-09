@@ -52,8 +52,8 @@ implementation does not silently enable external API spending.
 Create the private log directory first (`mkdir -p var && chmod 700 var`). Keep
 logs rotated. A PostgreSQL session advisory lock covers the entire run and is
 shared with fixture loading. An overlapping invocation fails without provider
-calls; process death releases its lock. Once the TMDB target is reached,
-subsequent manual/scheduled runs perform **zero TMDB and embedding calls**.
+calls; process death releases its lock. Once the TMDB target is reached with compatible vectors,
+subsequent normal manual/scheduled runs perform **zero TMDB and embedding calls**.
 
 ## Acquisition, usability and limits
 
@@ -100,6 +100,23 @@ covers normalized searchable facts, excluding vote count and full release date
 changed searchable facts/configuration replace the vector atomically with facts.
 Once the target is reached the job stops before any refresh; expanding targets
 or encountering repeated IDs is not a general catalog refresh mechanism.
+
+Changing the embedding endpoint/model/document configuration makes existing
+vectors incompatible. Normal ingestion fails with an actionable message instead
+of reporting a searchable completed catalog. Explicitly rebuild from stored facts:
+
+```bash
+docker compose exec -T app python -m cinemood ingest-tmdb --reindex --target 1000
+```
+
+This mode scans at most `--target` stored TMDB movies in stable local-ID order,
+embeds only incompatible/changed documents, and makes no TMDB calls or acquisition
+checkpoint changes. Each repaired movie commits separately; interruptions can
+resume with another `--reindex`. It may make up to `--target` embedding calls
+(default maximum 1,000), so select a smaller bound for experiments. It reports
+`complete` only when the existing catalog reaches the target and all its records
+were scanned; otherwise `incomplete`/`reindex_only` does not claim acquisition.
+Use the normal command afterward to continue toward the acquisition target.
 
 ## Snapshots and recovery boundary
 

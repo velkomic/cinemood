@@ -18,6 +18,11 @@ def main() -> int:
     loader.add_argument("--limit", type=int, choices=range(1, 5), default=4)
     importer = commands.add_parser("ingest-tmdb")
     importer.add_argument("--target", type=int, default=1000)
+    importer.add_argument(
+        "--reindex",
+        action="store_true",
+        help="Reindex up to target stored movies; no TMDB calls",
+    )
     importer.add_argument("--max-requests", type=int, default=150)
     importer.add_argument("--max-pages", type=int, default=5)
     args = parser.parse_args()
@@ -35,7 +40,13 @@ def main() -> int:
         elif args.command == "ingest-tmdb":
             print(
                 json.dumps(
-                    ingest(settings, args.target, args.max_requests, args.max_pages)
+                    ingest(
+                        settings,
+                        args.target,
+                        args.max_requests,
+                        args.max_pages,
+                        reindex=args.reindex,
+                    )
                 )
             )
         else:

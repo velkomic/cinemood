@@ -302,7 +302,12 @@ def checkpoint(conn: psycopg.Connection[dict[str, Any]], state: dict[str, Any]) 
 
 
 def ingest(
-    settings: Settings, target: int, max_requests: int, max_pages: int
+    settings: Settings,
+    target: int,
+    max_requests: int,
+    max_pages: int,
+    *,
+    reindex: bool = False,
 ) -> dict[str, Any]:
     store = LocalSnapshotStore(Path(os.getenv("TMDB_SNAPSHOT_DIR", "var/snapshots")))
     source = TMDB(store, max_requests)
@@ -336,6 +341,50 @@ def ingest(
         ).fetchone()
         assert count_row is not None
         total = count_row["total"]
+        if reindex:
+            # Read stored facts, never refetch TMDB or advance acquisition state.
+            rows = conn.execute(
+                """SELECT m.source_id, m.title, m.overview, m.release_year,
+                    m.release_date, m.original_language, m.runtime_minutes,
+                    m.vote_count, m.snapshot_key, m.fetched_at, m.provenance,
+                    ARRAY(SELECT g.name FROM movie_genres mg
+                          JOIN genres g ON g.id = mg.genre_id
+                          WHERE mg.movie_id = m.id ORDER BY g.name) AS genres
+                FROM movies m WHERE m.source_id LIKE 'tmdb:%%'
+                ORDER BY m.id LIMIT %s""",
+                (target,),
+            ).fetchall()
+            for row in rows:
+                stored_movie = {
+                    k: v
+                    for k, v in row.items()
+                    if k not in {"snapshot_key", "fetched_at", "provenance"}
+                }
+                stored_movie["release_date"] = str(stored_movie["release_date"])
+                with conn.transaction():
+                    report["embedded"] += int(
+                        save_movie(conn, settings, stored_movie, row, row["provenance"])
+                    )
+            report.update(total=total, target=target)
+            if total >= target and total <= len(rows):
+                report["status"] = "complete"
+            else:
+                report["reason"] = "reindex_only"
+            return report
+        incompatible = conn.execute(
+            """SELECT 1 FROM movies m
+            LEFT JOIN movie_embeddings e ON e.movie_id = m.id
+            WHERE m.source_id LIKE 'tmdb:%%' AND
+                (e.movie_id IS NULL OR e.model <> %s OR e.dimensions <> %s
+                 OR e.document_version <> %s OR e.provider_fingerprint <> %s)
+            LIMIT 1""",
+            (MODEL, DIMENSIONS, DOCUMENT_VERSION, settings.provider_fingerprint),
+        ).fetchone()
+        if incompatible:
+            raise IngestionError(
+                "Catalog embedding configuration changed. Run ingest-tmdb --reindex "
+                "to rebuild vectors from stored metadata without TMDB requests."
+            )
         try:
             while total < target:
                 if "batch" not in state:
