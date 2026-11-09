@@ -2,7 +2,7 @@
 
 ## Active milestone
 
-T1 complete and accepted with local verification: [Discover movies from a small local semantic catalog](https://github.com/velkomic/cinemood/issues/2). All 25 integration tests, Compose startup/retrieval, and deterministic plus live-OpenAI browser demonstrations passed. Standards and Spec reviews found no required code changes. The user accepted local verification instead of requiring a hosted GitHub Actions run; the workflow remains configured.
+T1 complete, published, and closed with accepted local verification: [Discover movies from a small local semantic catalog](https://github.com/velkomic/cinemood/issues/2). All 25 integration tests, Compose startup/retrieval, and deterministic plus live-OpenAI browser demonstrations passed. Standards and Spec reviews found no required code changes. The user accepted local verification instead of requiring a hosted GitHub Actions run; the workflow remains configured.
 
 ## Verified state
 
@@ -49,7 +49,7 @@ T1 complete and accepted with local verification: [Discover movies from a small 
 
 ## Next step
 
-T1 is accepted under the documented local-verification policy. Publish these verification notes with the implementation and close issue #2 with the evidence and CI substitution. Start one of T2 (#3), T3 (#4), or T5 (#6) in a fresh chat after closure; do not implement another slice in this session. T2 requires credential/data-use preflight before live TMDB ingestion. T3 (constraints) and T5 (collections) can proceed on the fixture catalog.
+Implementation commit `bd20424` and live-verification commit `5472d97` were pushed to `origin/main`. Issue #2 is closed as completed, with its acceptance checklist and completion comment recording the local-CI substitution. Start one of T2 (#3), T3 (#4), or T5 (#6) in a fresh chat; do not implement another slice in this session. T2 requires credential/data-use preflight before live TMDB ingestion. T3 (constraints) and T5 (collections) can proceed on the fixture catalog.
 
 ## Session handoff
 
