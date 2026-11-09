@@ -2,12 +2,14 @@
 
 ## Active milestone
 
+T2 ([#3: Search a bounded, resumable TMDB catalog](https://github.com/velkomic/cinemood/issues/3)) is implemented locally and undergoing final verification/review. Only this slice is in scope. The T1 blocker is closed. Detailed evidence and remaining live-verification prerequisites are recorded below.
+
 T1 complete, published, and closed with accepted local verification: [Discover movies from a small local semantic catalog](https://github.com/velkomic/cinemood/issues/2). All 25 integration tests, Compose startup/retrieval, and deterministic plus live-OpenAI browser demonstrations passed. Standards and Spec reviews found no required code changes. The user accepted local verification instead of requiring a hosted GitHub Actions run; the workflow remains configured.
 
 ## Verified state
 
 - Repository contains a README and agent setup instructions.
-- T1 local implementation is present; verification evidence is recorded below. Later slices have not been implemented.
+- T1 local implementation is present; verification evidence is recorded below. T2 implementation and its verification status are recorded below; T3–T6 have not been implemented.
 - GitHub issue search returned no open issues at the start of planning.
 - Cupcake search returned no CineMood context at the start of planning.
 - The `gh` CLI is unavailable in this environment. Connected GitHub tools verified `velkomic/cinemood` and created the specification and six implementation issues, all labelled `ready-for-agent`. Relationship metadata uses the documented issue-body fallback because native relationship tools are unavailable.
@@ -54,3 +56,14 @@ Implementation commit `bd20424` and live-verification commit `5472d97` were push
 ## Session handoff
 
 The repository documentation and published ticket are the durable context; the planning transcript need not be pasted into a new implementation chat. Use one implementation ticket per fresh chat. After T1 acceptance, choose an open ticket whose blockers are completed. Keep `plans/MVP.md` as the ticket index and update this progress file after each slice. Complete acceptance checks before reporting or closing a ticket as done.
+
+## T2 implementation evidence — 2026-11-09
+
+- Refetched the complete parent issue #1, ticket #3 and its comments, and blocker #2 through the connected GitHub tools before coding. #3 is open and `ready-for-agent`, with no comments; #2 is closed. Cupcake search returned no CineMood context.
+- Added `ingest-tmdb`: descending-vote-count English-localized discovery without an original-language restriction, explicit adult/usability validation, durable page/detail checkpoints, a single PostgreSQL session advisory lock shared with fixture loading, source-ID upserts, per-movie transactional metadata/vector/cursor commits, 250 ms pacing, bounded retries honoring Retry-After, and page/request ceilings. The initial target defaults to 1,000 unique TMDB movies; fixtures do not count.
+- Persisted release date, vote count and raw-detail snapshot keys in a new migration. Searchable-content changes replace facts and vector atomically while keeping local movie identity. Vote-count-only changes reuse embeddings. Saved pages survive remote reordering; saved details survive embedding failures. Target completion causes zero provider calls, including without credentials. The job is bounded initial acquisition, not a general refresh facility.
+- Local versioned JSON snapshots use atomic, fsynced mode-0600 files and relative content-addressed keys behind a storage interface suitable for a later S3 adapter. Compose retains snapshots in a named volume writable by the non-root app user. No S3/AWS infrastructure or SDK was added. Manual/cron instructions, usability thresholds, storage format, counts, and recovery limitations are in `docs/ingestion.md`.
+- Discover now identifies its local catalog accurately and includes Credits, the required TMDB notice, and the unchanged approved logo downloaded from TMDB's official attribution page.
+- Applied TDD at the pre-agreed ingestion-command and REST API boundaries, with real disposable PostgreSQL/pgvector and only external TMDB/OpenAI HTTP services replaced. Initial command and attribution acceptance checks failed before implementation. The ingestion file then passed **26 tests in 77.76s**, covering import visibility, snapshots, target stop, SIGKILL/resume, concurrent exclusion, remote reorder, duplicates, unusable/adult/non-English metadata, 429/503, ceilings, source exhaustion, changed content/embedding reuse, provider failure/detail reuse, snapshot failure, and CLI bounds. Subsequent verification of the strengthened credential-free target-repeat assertion is pending the final suite.
+- Ruff lint/format and strict mypy (9 application source files) passed. Compose, browser, independent review, and final full-suite results are pending below; no hosted CI result is claimed.
+- The user confirmed the applicable terms review and authorized bounded live verification in this session. At initial credential inspection, `.env` contained OpenAI configuration but no `TMDB_READ_TOKEN`; no secrets were printed. Planned live verification is capped at five accepted movies, one new discovery page and 12 TMDB HTTP attempts, followed by one query embedding and a zero-fetch repeat. No live TMDB run or completed 1,000-movie catalog is claimed here.

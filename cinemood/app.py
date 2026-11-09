@@ -48,13 +48,13 @@ def create_app() -> FastAPI:
             if not has_catalog(settings):
                 return {
                     "movies": [],
-                    "message": "The catalog is empty. Load the fixture catalog first.",
+                    "message": "The catalog is empty. Load the movie catalog first.",
                 }
             vector = embed([body.request], settings)[0]
             return {
                 "movies": retrieve(settings, vector),
                 "message": (
-                    "Semantic matches from a small fictional catalog. "
+                    "Semantic matches from the local movie catalog. "
                     "Constraints are not checked yet."
                 ),
             }

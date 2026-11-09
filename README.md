@@ -2,8 +2,9 @@
 
 A small semantic movie discovery demo: FastAPI serves Discover and a REST API;
 PostgreSQL/pgvector stores catalog facts and performs exact cosine retrieval.
-This slice searches four **fictional CC0 films**. Hard constraints, generated
-explanations, TMDB ingestion, and collections belong to later tickets.
+Load the four **fictional CC0 films** for an independent fixture demo, or use the
+[bounded, resumable TMDB importer](docs/ingestion.md) for real movies. Hard
+constraints, generated explanations, and collections belong to later tickets.
 
 ## Start from a clean checkout
 
@@ -23,7 +24,7 @@ docker compose exec app python -m cinemood load-fixtures --limit 4
 Open <http://localhost:8000> and enter a mood or theme. Loading four films sends
 one batch of at most four short documents to `text-embedding-3-small`, at 1,536
 dimensions. Each search embeds one request. There are no model retries; network
-operations time out after 15 seconds. The loader never fetches TMDB data.
+operations time out after 15 seconds. The fixture loader never fetches TMDB data.
 Without a key, the app still starts, `/health` works, and Discover reports an
 empty catalog; loading requires a configured provider and exits with a useful
 error otherwise. Unchanged fixture records are skipped on subsequent loads.
@@ -84,13 +85,14 @@ docker run --rm -d --name cinemood-test-db \
 export TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55432/postgres
 uv run python -m pytest tests/test_discover.py -q
 uv run python -m pytest tests/test_fixture_command.py -q
+uv run python -m pytest tests/test_ingestion_command.py -q
 uv run python -m pytest -q
 docker stop cinemood-test-db
 ```
 
 GitHub Actions runs the same correctness checks against a real pgvector service.
-Tests exercise the REST API and fixture-loading command; only the external
-OpenAI HTTP endpoint is replaced with deterministic responses. They do not
+Tests exercise the REST API, fixture-loading and TMDB ingestion commands; the
+external OpenAI and TMDB HTTP endpoints use deterministic fictional responses. They do not
 establish real-provider availability or subjective semantic quality.
 
 ## Offline local demonstration
@@ -142,7 +144,9 @@ visitor text never becomes SQL.
 The bounded fixture loader acquires a separate transaction advisory lock,
 embeds only changed/incompatible documents, and commits metadata, genre links,
 and vectors atomically. An interrupted four-record batch rolls back and can be
-rerun. It is not the resumable paginated TMDB ingestion job in ticket #3.
+rerun. The separate `ingest-tmdb` command implements resumable paginated acquisition;
+see [its operating guide](docs/ingestion.md) for checkpoints, snapshots, SQL,
+scheduling, limits, and the live-data preflight.
 
 `cinemood/embeddings.py` uses LangChain's OpenAI integration. It validates count,
 dimensions, finite coordinates, and nonzero vectors before database use. The

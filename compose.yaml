@@ -20,6 +20,10 @@ services:
       DATABASE_URL: postgresql://cinemood:cinemood@db/cinemood
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      TMDB_READ_TOKEN: ${TMDB_READ_TOKEN:-}
+      TMDB_SNAPSHOT_DIR: /data/snapshots
+    volumes:
+      - tmdb-snapshots:/data/snapshots
     depends_on:
       db:
         condition: service_healthy
@@ -29,4 +33,5 @@ services:
       timeout: 3s
       retries: 20
 volumes:
+  tmdb-snapshots:
   postgres-data:

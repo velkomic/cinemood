@@ -8,6 +8,7 @@ COPY cinemood ./cinemood
 COPY migrations ./migrations
 COPY fixtures ./fixtures
 ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+RUN mkdir -p /data/snapshots && chown -R 10001:10001 /data
 USER 10001:10001
 EXPOSE 8000
 CMD ["sh", "-c", "python -m cinemood migrate && uvicorn cinemood.app:app --host 0.0.0.0 --port 8000 --limit-concurrency 16"]
