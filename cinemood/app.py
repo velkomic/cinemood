@@ -54,17 +54,19 @@ def create_app() -> FastAPI:
     @app.post("/api/recommendations")
     def discover(body: DiscoverRequest) -> dict[str, object]:
         try:
-            if not has_catalog(settings):
-                return {
-                    "movies": [],
-                    "message": "The catalog is empty. Load the movie catalog first.",
-                }
             applied_change = None
             if body.selection is not None:
                 original, interpretation, applied_change = select(
                     body.selection, body.request, selection_key
                 )
             else:
+                if not has_catalog(settings):
+                    return {
+                        "movies": [],
+                        "message": (
+                            "The catalog is empty. Load the movie catalog first."
+                        ),
+                    }
                 interpretation = interpret(body.request, settings)
                 original = interpretation
             if interpretation.clarification:
@@ -87,18 +89,27 @@ def create_app() -> FastAPI:
                     if body.selection is None
                     else []
                 )
+                if body.selection is not None:
+                    message = (
+                        "This displayed option is no longer available in the catalog. "
+                        "Please search again."
+                    )
+                elif offered:
+                    message = (
+                        "No movies meet these restrictions. Select an optional "
+                        "change; counts show filter eligibility, not relevance."
+                    )
+                else:
+                    message = (
+                        "No single-constraint change produces catalog matches. "
+                        "Please edit your request."
+                    )
                 return {
                     **common,
                     "movies": [],
                     "status": "no_match",
                     "suggestions": offered,
-                    "message": (
-                        "No movies meet these restrictions. Select an optional "
-                        "change; counts show filter eligibility, not relevance."
-                        if offered
-                        else "No movies meet these restrictions and no bounded change "
-                        "helps. Please edit your request."
-                    ),
+                    "message": message,
                 }
             vector = embed([interpretation.semantic_query], settings)[0]
             return {

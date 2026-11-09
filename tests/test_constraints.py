@@ -17,14 +17,6 @@ def test_runtime_boundary_and_interpretation(loaded_client):
     assert data["original_request"] == "quiet comfort under 92 minutes"
 
 
-@pytest.fixture
-def extraction(monkeypatch):
-    responses = {}
-    monkeypatch.setattr(OpenAIHandler, "interpretations", responses)
-    monkeypatch.setattr(OpenAIHandler, "calls", [])
-    return responses
-
-
 @pytest.mark.parametrize(
     ("changes", "expected"),
     [
@@ -137,14 +129,14 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
         (
             {"year_min": 2030, "year_max": 2040},
             "year_min",
-            3,
-            ["fixture:lantern", "fixture:river", "fixture:orbital"],
+            1,
+            ["fixture:river"],
         ),
         (
             {"year_min": 1800, "year_max": 2010},
             "year_max",
-            2,
-            ["fixture:garden", "fixture:orbital"],
+            1,
+            ["fixture:garden"],
         ),
         (
             {"original_language": "de"},
@@ -179,10 +171,11 @@ def test_each_relaxation_is_catalog_backed(
     assert [m["source_id"] for m in selected["movies"]] == expected
 
 
-def test_no_bounded_change_has_a_useful_empty_state(loaded_client, extraction):
+def test_no_single_change_has_a_useful_empty_state(loaded_client, extraction):
     extraction["very short"] = {
         "runtime_minutes": 1,
         "runtime_operator": "lt",
+        "year_max": 1900,
         "unsupported_requirements": ["Current Netflix availability"],
     }
     data = loaded_client.post(

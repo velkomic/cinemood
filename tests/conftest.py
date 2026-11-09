@@ -71,3 +71,11 @@ def loaded_client(client):
     result = command("load-fixtures")
     assert result.returncode == 0, result.stderr
     return client
+
+
+@pytest.fixture
+def extraction(monkeypatch):
+    responses = {}
+    monkeypatch.setattr(OpenAIHandler, "interpretations", responses)
+    monkeypatch.setattr(OpenAIHandler, "calls", [])
+    return responses

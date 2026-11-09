@@ -1,5 +1,6 @@
 import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -226,3 +227,35 @@ def count_candidates(settings: Settings, constraints: Interpretation) -> int:
         ).fetchone()
         assert row is not None
         return int(row["total"])
+
+
+@dataclass(frozen=True)
+class CandidateSummary:
+    movie_ids: tuple[int, ...]
+    shortest_runtime: int | None
+    earliest_year: int | None
+    latest_year: int | None
+
+
+def candidate_summary(
+    conn: psycopg.Connection[dict[str, Any]],
+    settings: Settings,
+    constraints: Interpretation,
+) -> CandidateSummary:
+    predicate, params = eligible_filter(settings, constraints)
+    row = conn.execute(
+        f"""SELECT COALESCE(array_agg(m.id ORDER BY m.id), ARRAY[]::bigint[]) AS ids,
+                   min(m.runtime_minutes) AS shortest_runtime,
+                   min(m.release_year) AS earliest_year,
+                   max(m.release_year) AS latest_year
+            FROM movies m JOIN movie_embeddings e ON e.movie_id = m.id
+            WHERE {predicate}""",
+        params,
+    ).fetchone()
+    assert row is not None
+    return CandidateSummary(
+        tuple(row["ids"]),
+        row["shortest_runtime"],
+        row["earliest_year"],
+        row["latest_year"],
+    )

@@ -6,12 +6,14 @@ import hashlib
 import hmac
 import json
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+import psycopg
+from pydantic import BaseModel, ConfigDict, ValidationError
 
-from cinemood.catalog import count_candidates
+from cinemood.catalog import candidate_summary, connect
 from cinemood.config import Settings
 from cinemood.constraints import Interpretation
 
@@ -24,53 +26,46 @@ class Selection(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     request: str
     original: Interpretation
-    change_index: Annotated[int, Field(ge=0, le=23)]
+    field: str
+    value: int | list[str] | None
     expires: int
 
 
 @dataclass(frozen=True)
 class ConstraintChange:
     field: str
-    value: object
-    label: str
+    value: int | list[str] | None
 
 
-def changes(original: Interpretation) -> list[ConstraintChange]:
-    options: list[ConstraintChange] = []
+def changes(
+    original: Interpretation,
+    conn: psycopg.Connection[dict[str, Any]],
+    settings: Settings,
+) -> Iterator[ConstraintChange]:
     if original.runtime_minutes is not None:
-        comparison = "under" if original.runtime_operator == "lt" else "at most"
-        for increment in (15, 30):
-            revised = min(original.runtime_minutes + increment, 1440)
-            if revised > original.runtime_minutes:
-                option = ConstraintChange(
-                    "runtime_minutes",
-                    revised,
-                    f"Allow {comparison} {revised} minutes",
-                )
-                if option not in options:
-                    options.append(option)
-    if original.year_min is not None and original.year_min > 1800:
-        year = max(1800, original.year_min - 10)
-        options.append(
-            ConstraintChange("year_min", year, f"Include release years from {year}")
+        without_runtime = original.model_copy(
+            update={"runtime_minutes": None, "runtime_operator": None}
         )
-    if original.year_max is not None and original.year_max < 2200:
-        year = min(2200, original.year_max + 10)
-        options.append(
-            ConstraintChange("year_max", year, f"Include release years through {year}")
-        )
+        shortest = candidate_summary(conn, settings, without_runtime).shortest_runtime
+        if shortest is not None:
+            limit = shortest + int(original.runtime_operator == "lt")
+            if original.runtime_minutes < limit <= 1440:
+                yield ConstraintChange("runtime_minutes", limit)
+    if original.year_min is not None:
+        without_min = original.model_copy(update={"year_min": None})
+        year = candidate_summary(conn, settings, without_min).latest_year
+        if year is not None and 1800 <= year < original.year_min:
+            yield ConstraintChange("year_min", year)
+    if original.year_max is not None:
+        without_max = original.model_copy(update={"year_max": None})
+        year = candidate_summary(conn, settings, without_max).earliest_year
+        if year is not None and original.year_max < year <= 2200:
+            yield ConstraintChange("year_max", year)
     if original.original_language is not None:
-        options.append(
-            ConstraintChange("original_language", None, "Allow any original language")
-        )
-    for genre in original.included_genres:
+        yield ConstraintChange("original_language", None)
+    for genre in sorted(original.included_genres):
         remaining = [g for g in original.included_genres if g != genre]
-        options.append(
-            ConstraintChange(
-                "included_genres", remaining, f"Stop requiring the genre {genre}"
-            )
-        )
-    return options
+        yield ConstraintChange("included_genres", remaining)
 
 
 def apply(original: Interpretation, change: ConstraintChange) -> Interpretation:
@@ -83,36 +78,94 @@ def suggestions(
     request: str, original: Interpretation, settings: Settings, key: bytes
 ) -> list[dict[str, object]]:
     offered: list[dict[str, object]] = []
-    # At most 24 fixed probes (19 genres + two runtime + two years + language).
-    for index, change in enumerate(changes(original)):
-        revised = apply(original, change)
-        count = count_candidates(settings, revised)
-        if not count:
-            continue
-        payload = (
-            Selection(
-                request=request,
-                original=original,
-                change_index=index,
-                expires=int(time.time()) + 900,
+    seen: set[tuple[int, ...]] = set()
+    with connect(settings) as conn:
+        # Every boundary and count describes the same catalog snapshot.
+        conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        for change in changes(original, conn, settings):
+            revised = apply(original, change)
+            candidates = candidate_summary(conn, settings, revised).movie_ids
+            if not candidates or candidates in seen:
+                continue
+            seen.add(candidates)
+            payload = (
+                Selection(
+                    request=request,
+                    original=original,
+                    field=change.field,
+                    value=change.value,
+                    expires=int(time.time()) + 900,
+                )
+                .model_dump_json()
+                .encode()
             )
-            .model_dump_json()
-            .encode()
-        )
-        encoded = base64.urlsafe_b64encode(payload).decode()
-        signature = hmac.new(key, encoded.encode(), hashlib.sha256).hexdigest()
-        offered.append(
-            {
-                "field": change.field,
-                "label": change.label,
-                "candidate_count": count,
-                "interpretation": revised.model_dump(),
-                "selection": f"{encoded}.{signature}",
-            }
-        )
-        if len(offered) == 3:
-            break
+            encoded = base64.urlsafe_b64encode(payload).decode()
+            signature = hmac.new(key, encoded.encode(), hashlib.sha256).hexdigest()
+            offered.append(
+                {
+                    "field": change.field,
+                    "label": validate_and_describe_change(original, revised),
+                    "candidate_count": len(candidates),
+                    "interpretation": revised.model_dump(),
+                    "selection": f"{encoded}.{signature}",
+                }
+            )
+            if len(offered) == 3:
+                break
     return offered
+
+
+def validate_and_describe_change(
+    original: Interpretation, revised: Interpretation
+) -> str:
+    before, after = original.model_dump(), revised.model_dump()
+    changed = [field for field in before if before[field] != after[field]]
+    if len(changed) != 1:
+        raise SelectionInvalid
+    field = changed[0]
+    # Validate a single broadening change; every other fact (including exclusions,
+    # query and unchecked requirements) must remain identical.
+    if field == "runtime_minutes":
+        old, new = original.runtime_minutes, revised.runtime_minutes
+        if old is None or new is None or new <= old:
+            raise SelectionInvalid
+        comparison = "under" if original.runtime_operator == "lt" else "at most"
+        old_unit = "minute" if old == 1 else "minutes"
+        new_unit = "minute" if new == 1 else "minutes"
+        delta_unit = "minute" if new - old == 1 else "minutes"
+        label = (
+            f"Change runtime from {comparison} {old} {old_unit} "
+            f"to {comparison} {new} {new_unit} (+{new - old} {delta_unit})"
+        )
+    elif field == "year_min":
+        old, new = original.year_min, revised.year_min
+        if old is None or new is None or new >= old:
+            raise SelectionInvalid
+        label = f"Change earliest year from {old} to {new} ({old - new} years earlier)"
+    elif field == "year_max":
+        old, new = original.year_max, revised.year_max
+        if old is None or new is None or new <= old:
+            raise SelectionInvalid
+        label = f"Change latest year from {old} to {new} ({new - old} years later)"
+    elif field == "original_language":
+        if original.original_language is None or revised.original_language is not None:
+            raise SelectionInvalid
+        label = f"Change original language from {original.original_language} to any"
+    elif field == "included_genres":
+        removed = set(original.included_genres) - set(revised.included_genres)
+        if len(removed) != 1 or revised.included_genres != [
+            g for g in original.included_genres if g not in removed
+        ]:
+            raise SelectionInvalid
+        label = (
+            "Change required genres from "
+            f"{', '.join(sorted(original.included_genres))} "
+            f"to {', '.join(sorted(revised.included_genres)) or 'any'} "
+            f"(remove {next(iter(removed))})"
+        )
+    else:
+        raise SelectionInvalid
+    return label
 
 
 def select(
@@ -127,7 +180,10 @@ def select(
         selection = Selection.model_validate(json.loads(payload))
         if selection.request != request or selection.expires <= time.time():
             raise SelectionInvalid
-        change = changes(selection.original)[selection.change_index]
-        return selection.original, apply(selection.original, change), change.label
-    except (ValueError, ValidationError, binascii.Error, IndexError) as exc:
+        revised = apply(
+            selection.original, ConstraintChange(selection.field, selection.value)
+        )
+        label = validate_and_describe_change(selection.original, revised)
+        return selection.original, revised, label
+    except (ValueError, ValidationError, binascii.Error) as exc:
         raise SelectionInvalid from exc

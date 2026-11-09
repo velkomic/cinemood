@@ -54,25 +54,42 @@ interpretation. An empty compatible catalog returns an actionable empty response
 without calling providers. Provider or catalog failures return safe `503` details.
 Request validation/body-size failures remain `422`/`413`.
 
-Only zero SQL-eligible movies triggers optional alternatives. The application
-tries, in order, maximum runtime +15/+30 minutes (capped at 1,440, retaining the
-original comparator), earliest year -10, latest year +10 (within 1800–2200), any
-original language, and removal of each required genre individually. This is at
-most 24 fixed probes, stopping after three successful suggestions. No probe
-changes exclusions or acquisition's adult-content exclusion. Multiple simultaneous
-changes and semantic-similarity thresholds are outside this policy.
+Only zero SQL-eligible movies triggers optional alternatives. For each active
+restriction, remove only that restriction and query the compatible catalog:
+
+- Runtime: use the shortest remaining runtime, plus one minute for a strict `<`
+  comparison (or the runtime itself for `<=`), within the 1–1,440 schema bounds.
+- Earliest year: lower to the greatest remaining release year, keeping the upper
+  bound. Latest year: raise to the smallest remaining year, keeping the lower bound.
+- Language: allow any original language if that produces candidates.
+- Genres: remove one required genre, trying names in alphabetical order.
+
+Every exact revision is validated and checked with the shared eligibility SQL.
+Numeric options show before/after values and the difference, even for large
+changes. Keep at most three distinct candidate sets in runtime, earliest-year,
+latest-year, language, then genre-name order. This is presentation order, not a
+semantic-quality score. There are at most 23 active restrictions; generation uses
+at most 26 aggregate queries (two per numeric restriction, one per categorical
+option), and stops when three distinct options have been found. All aggregates
+run in one read-only REPEATABLE READ transaction so boundaries and counts refer
+to a consistent catalog snapshot. No minutes/years are scanned incrementally.
+Exclusions and adult-content acquisition rules are never relaxed. Multiple
+simultaneous changes and semantic-similarity thresholds remain outside this policy.
 
 Each suggestion has `label`, `field`, `candidate_count`, revised `interpretation`,
 and opaque `selection`. Counts use the same eligible-catalog SQL as retrieval,
 including compatible embeddings; counts describe filter eligibility, not relevance.
-If no bounded change helps, the response invites an edited request.
+If no single-constraint change helps, the response explicitly says so and invites
+an edited request.
 
 After an explicit click, POST `{"request":"<original>","selection":"<token>"}`
 to the same endpoint. A server-authenticated token binds the original request,
-interpretation and one displayed change. The client cannot supply revised filters.
+interpretation and the exact field/value displayed. It does not store an index
+that could acquire a different meaning after catalog changes. The client cannot supply revised filters.
 No new extraction call is made; SQL rechecks eligibility, and only then is the
 unchanged semantic query embedded for retrieval. If the catalog has changed so
-no candidates remain, return an empty state without further automatic changes.
+no candidates remain, report that the displayed option is no longer available
+and ask for a new search. Do not substitute a newly computed bound.
 The original request and restrictions remain in the response and UI.
 
 Tokens expire after 15 minutes and use an ephemeral per-application signing key.
