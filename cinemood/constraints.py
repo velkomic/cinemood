@@ -1,5 +1,7 @@
 """Validated request interpretation; model output never becomes SQL."""
 
+import re
+from fractions import Fraction
 from typing import Annotated, Literal, Self
 
 from langchain_openai import ChatOpenAI
@@ -88,6 +90,29 @@ class Interpretation(BaseModel):
         return self
 
 
+def duplicates_checked_runtime(requirement: str, parsed: Interpretation) -> bool:
+    """Recognize only complete literal comparisons equal to the validated limit.
+
+    Never remove a mixed claim (for example runtime plus Netflix availability),
+    a minimum runtime, or a comparison with a different value/operator.
+    """
+    if parsed.runtime_minutes is None:
+        return False
+    normalized = " ".join(requirement.casefold().split()).rstrip(".!?")
+    comparison = re.fullmatch(
+        r"(?:(?:runtime|duration|length)(?: of)?[ :]+)?"
+        r"(under|below|less than|at most|up to|no longer than|<=|<)\s*"
+        r"([0-9]+(?:\.[0-9]+)?)\s*(minutes?|mins?|hours?|hrs?)",
+        normalized,
+    )
+    if comparison is None:
+        return False
+    operator, number, unit = comparison.groups()
+    operator = "lt" if operator in {"under", "below", "less than", "<"} else "lte"
+    minutes = Fraction(number) * (60 if unit.startswith(("hour", "hr")) else 1)
+    return operator == parsed.runtime_operator and minutes == parsed.runtime_minutes
+
+
 class InterpretationInvalid(Exception):
     pass
 
@@ -109,6 +134,11 @@ unsupported_requirements, never treated as checked or mere mood preferences.
 Unsupported requirements alone do not require clarification: continue extracting
 all supported restrictions, and omit unchecked facts from semantic_query.
 Use clarification only for ambiguous or conflicting supported restrictions.
+Never list a supported restriction again in unsupported_requirements. A maximum
+runtime is supported even when it is unrealistic or no catalog movie meets it:
+"under 1 minute" means runtime_minutes=1, runtime_operator="lt", not an unchecked
+requirement. Catalog absence is not unsupported functionality. List unrelated
+unchecked facts separately (e.g. Netflix availability), not bundled with runtime.
 Do not infer factual guarantees from overview text. Mood/themes are semantic.
 Return every schema field, including empty lists and nulls where appropriate.
 """
@@ -139,7 +169,15 @@ def interpret(request: str, settings: Settings) -> Interpretation:
             or raw.additional_kwargs.get("refusal")
         ):
             raise InterpretationInvalid
-        return parsed
+        return parsed.model_copy(
+            update={
+                "unsupported_requirements": [
+                    item
+                    for item in parsed.unsupported_requirements
+                    if not duplicates_checked_runtime(item, parsed)
+                ]
+            }
+        )
     except (
         ValidationError,
         LengthFinishReasonError,

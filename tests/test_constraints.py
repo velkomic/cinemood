@@ -342,3 +342,68 @@ def test_unsupported_warning_does_not_bypass_supported_ambiguity(
         "Current Netflix availability"
     ]
     assert len(OpenAIHandler.calls) == 1
+
+
+@pytest.mark.parametrize("other_warning", [None, "Current Netflix availability"])
+def test_supported_runtime_is_not_unchecked_after_explicit_relaxation(
+    loaded_client, extraction, other_warning
+):
+    request = "A movie under 1 minute"
+    warnings = ["under 1 minute"] + ([other_warning] if other_warning else [])
+    extraction[request] = {
+        "semantic_query": "movie",
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+        "unsupported_requirements": warnings,
+    }
+    original = loaded_client.post(
+        "/api/recommendations", json={"request": request}
+    ).json()
+    option = original["suggestions"][0]
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={"request": request, "selection": option["selection"]},
+    ).json()
+    assert selected["movies"]
+    assert selected["interpretation"]["runtime_minutes"] == 89
+    expected_warnings = [other_warning] if other_warning else []
+    assert selected["interpretation"]["unsupported_requirements"] == expected_warnings
+    assert original["interpretation"]["unsupported_requirements"] == expected_warnings
+    assert (
+        selected["original_interpretation"]["unsupported_requirements"]
+        == expected_warnings
+    )
+
+
+@pytest.mark.parametrize(
+    ("runtime", "operator", "warning", "expected"),
+    [
+        (1, "lt", "Runtime: under 1 minute.", []),
+        (60, "lte", "AT MOST 1 HOUR", []),
+        (90, "lt", "duration less than 1.5 hours", []),
+        (90, "lte", "up to 90 mins", []),
+        (1, "lt", "at least 1 minute", ["at least 1 minute"]),
+        (1, "lt", "under 2 minutes", ["under 2 minutes"]),
+        (1, "lt", "at most 1 minute", ["at most 1 minute"]),
+        (
+            1,
+            "lt",
+            "under 1 minute and available on Netflix",
+            ["under 1 minute and available on Netflix"],
+        ),
+        (None, None, "under 1 minute", ["under 1 minute"]),
+    ],
+)
+def test_runtime_warning_reconciliation_is_exact_and_conservative(
+    loaded_client, extraction, runtime, operator, warning, expected
+):
+    extraction["quiet comfort"] = {
+        "runtime_minutes": runtime,
+        "runtime_operator": operator,
+        "unsupported_requirements": [warning],
+    }
+    response = loaded_client.post(
+        "/api/recommendations", json={"request": "quiet comfort"}
+    )
+    assert response.status_code == 200
+    assert response.json()["interpretation"]["unsupported_requirements"] == expected

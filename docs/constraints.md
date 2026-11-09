@@ -42,6 +42,15 @@ Interpretation fields are `semantic_query`, `included_genres`, `excluded_genres`
 `runtime_minutes`, `runtime_operator` (`lt`/`lte`), `year_min`, `year_max`,
 `original_language`, `unsupported_requirements`, and `clarification`.
 
+A maximum-runtime restriction remains supported even when no catalog movie can
+meet it. The extraction prompt forbids listing supported restrictions as unchecked.
+After validation, interpretation removes a complete literal runtime warning only
+when its comparator and numeric bound exactly match the extracted runtime (with
+exact minute/hour conversion). This reconciliation happens once, before response
+and selection-token creation. It never strips mixed factual claims, minimum-runtime
+requirements, mismatched comparisons, or a runtime not present in validated fields.
+Unrecognized wording remains visible rather than being silently discarded.
+
 Unsupported requirements alone do not block search: `matches` responses keep
 `interpretation.unsupported_requirements`, include a warning in `message`, and
 the UI highlights every unchecked requirement above the movie cards. Warnings
