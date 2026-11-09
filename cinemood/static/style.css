@@ -30,3 +30,5 @@ footer { padding: 24px 6vw; border-top: 1px solid #394143; color: #aeb7b4; font-
 #interpretation p { font-size: 14px; line-height: 1.6; }
 #suggestions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
 #suggestions button { margin-top: 0; text-align: left; }
+
+.warning { margin-top: 16px; padding: 4px 16px; border-left: 3px solid #e6bc72; background: #302e25; color: #f3d8a6; }

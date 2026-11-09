@@ -67,14 +67,13 @@ def create_app() -> FastAPI:
             else:
                 interpretation = interpret(body.request, settings)
                 original = interpretation
-            if interpretation.clarification or interpretation.unsupported_requirements:
+            if interpretation.clarification:
                 return {
                     "movies": [],
                     "original_request": body.request,
                     "interpretation": interpretation.model_dump(),
                     "status": "clarification",
-                    "message": "Please clarify or edit your request. "
-                    "Unsupported factual requirements have not been checked.",
+                    "message": "Please clarify or edit your request before searching.",
                 }
             common = {
                 "original_request": body.request,
@@ -108,7 +107,10 @@ def create_app() -> FastAPI:
                 "suggestions": [],
                 "movies": retrieve(settings, vector, interpretation),
                 "message": (
-                    "Semantic matches from the local movie catalog. "
+                    "Movies match your supported restrictions. Some requirements were "
+                    "not checked; see the warnings below."
+                    if interpretation.unsupported_requirements
+                    else "Semantic matches from the local movie catalog. "
                     "Supported constraints were checked."
                 ),
             }

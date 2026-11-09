@@ -106,6 +106,9 @@ put a concise question in clarification. Preserve conflicting genre/year values
 so validation can reject them. Unsupported factual requirements (e.g. streaming
 availability, actors, awards, age suitability, minimum runtime) must be listed in
 unsupported_requirements, never treated as checked or mere mood preferences.
+Unsupported requirements alone do not require clarification: continue extracting
+all supported restrictions, and omit unchecked facts from semantic_query.
+Use clarification only for ambiguous or conflicting supported restrictions.
 Do not infer factual guarantees from overview text. Mood/themes are semantic.
 Return every schema field, including empty lists and nulls where appropriate.
 """

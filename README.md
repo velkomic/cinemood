@@ -65,8 +65,9 @@ start/stop it while preserving its database and raw snapshots.
   with safe `detail`; no recommendations are claimed.
 - `GET /health`: checks the database connection, not paid provider availability.
 
-The response shows the interpreted restrictions. Invalid/ambiguous interpretations
-and unsupported factual requirements stop search with a clarification state.
+The response shows the interpreted restrictions. Unsupported factual requirements
+produce visible “not checked” warnings while search continues with supported
+restrictions. Invalid or ambiguous interpretations still stop for clarification.
 Zero eligible movies can return up to three explicit optional changes. See the
 [constraint API contract and SQL policy](docs/constraints.md) for response fields,
 strict/inclusive boundaries, selection tokens, and supported limits.

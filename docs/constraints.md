@@ -22,7 +22,8 @@ No explanation generation or streaming is implemented in this slice.
   empty/unknown codes, and genre-filtered queries require at least one genre.
 - Mood and themes influence vector ranking; they are not factual guarantees.
   Streaming availability, cast, awards, minimum runtime, and other unsupported
-  factual requirements are surfaced as unchecked and require an edited request.
+  factual requirements are surfaced as unchecked warnings. Search continues using
+  supported restrictions and mood/themes; it does not claim the unchecked facts.
 
 The model must return every interpretation field. Strict application validation
 rejects extra fields, bad types, unrecognized genres/languages, reversed year
@@ -41,8 +42,13 @@ Interpretation fields are `semantic_query`, `included_genres`, `excluded_genres`
 `runtime_minutes`, `runtime_operator` (`lt`/`lte`), `year_min`, `year_max`,
 `original_language`, `unsupported_requirements`, and `clarification`.
 
-A `clarification` response has no movies; valid but ambiguous/unsupported
-interpretations include their questions and unchecked requirements. Invalid or
+Unsupported requirements alone do not block search: `matches` responses keep
+`interpretation.unsupported_requirements`, include a warning in `message`, and
+the UI highlights every unchecked requirement above the movie cards. Warnings
+also persist on no-match responses and after explicit relaxation selection.
+
+A `clarification` response has no movies; ambiguous supported restrictions
+include their questions and any separate unchecked requirements. Invalid or
 refused output returns a generic invitation to edit without claiming a valid
 interpretation. An empty compatible catalog returns an actionable empty response
 without calling providers. Provider or catalog failures return safe `503` details.

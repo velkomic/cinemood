@@ -69,10 +69,9 @@ def test_sql_filters_before_ranking(loaded_client, extraction, changes, expected
         {"_finish_reason": "length"},
         {"_finish_reason": "content_filter"},
         {"clarification": ["Which decade do you mean?"]},
-        {"unsupported_requirements": ["Current Netflix availability"]},
     ],
 )
-def test_invalid_or_unchecked_requirements_stop_before_retrieval(
+def test_invalid_or_ambiguous_requirements_stop_before_retrieval(
     loaded_client, extraction, changes
 ):
     extraction["uncertain request"] = changes
@@ -83,11 +82,6 @@ def test_invalid_or_unchecked_requirements_stop_before_retrieval(
     assert data["movies"] == []
     assert "edit" in data["message"].lower() or "clarif" in data["message"].lower()
     assert not any(p.endswith("embeddings") for p in OpenAIHandler.calls)
-    if "unsupported_requirements" in changes:
-        assert (
-            data["interpretation"]["unsupported_requirements"]
-            == changes["unsupported_requirements"]
-        )
 
 
 def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extraction):
@@ -97,6 +91,7 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
         "included_genres": ["Drama"],
         "excluded_genres": ["Adventure"],
         "original_language": "en",
+        "unsupported_requirements": ["Current Netflix availability"],
     }
     extraction["gentle short drama"] = original
     data = loaded_client.post(
@@ -127,6 +122,10 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
         assert selected["original_request"] == "gentle short drama"
         assert selected["interpretation"] == revised
         assert selected["movies"]
+        assert "not checked" in selected["message"].lower()
+        assert selected["interpretation"]["unsupported_requirements"] == [
+            "Current Netflix availability"
+        ]
         assert all("Adventure" not in m["genres"] for m in selected["movies"])
     # Selection uses the server's prior interpretation, never re-extraction.
     assert sum(p.endswith("chat/completions") for p in OpenAIHandler.calls) == 1
@@ -181,12 +180,19 @@ def test_each_relaxation_is_catalog_backed(
 
 
 def test_no_bounded_change_has_a_useful_empty_state(loaded_client, extraction):
-    extraction["very short"] = {"runtime_minutes": 1, "runtime_operator": "lt"}
+    extraction["very short"] = {
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+        "unsupported_requirements": ["Current Netflix availability"],
+    }
     data = loaded_client.post(
         "/api/recommendations", json={"request": "very short"}
     ).json()
     assert data["movies"] == []
     assert data["suggestions"] == []
+    assert data["interpretation"]["unsupported_requirements"] == [
+        "Current Netflix availability"
+    ]
     assert "edit" in data["message"].lower()
     assert len(OpenAIHandler.calls) == 1
 
@@ -277,3 +283,69 @@ def test_catalog_change_after_suggestion_returns_empty_without_broadening(
     assert response["suggestions"] == []
     assert sum(p.endswith("chat/completions") for p in OpenAIHandler.calls) == 1
     assert not any(p.endswith("embeddings") for p in OpenAIHandler.calls)
+
+
+def test_unsupported_requirements_warn_without_dropping_supported_filters(
+    loaded_client, extraction
+):
+    request = "A gentle movie on Netflix, in English, at most 90 minutes, no Comedy"
+    extraction[request] = {
+        "semantic_query": "quiet comfort",
+        "original_language": "en",
+        "runtime_minutes": 90,
+        "runtime_operator": "lte",
+        "excluded_genres": ["Comedy"],
+        "unsupported_requirements": ["Current Netflix availability"],
+    }
+    response = loaded_client.post("/api/recommendations", json={"request": request})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "matches"
+    assert [m["source_id"] for m in data["movies"]] == ["fixture:river"]
+    assert data["interpretation"]["unsupported_requirements"] == [
+        "Current Netflix availability"
+    ]
+    assert data["interpretation"]["clarification"] == []
+    assert data["original_request"] == request
+    assert "not checked" in data["message"].lower()
+    assert sum(p.endswith("chat/completions") for p in OpenAIHandler.calls) == 1
+    assert sum(p.endswith("embeddings") for p in OpenAIHandler.calls) == 1
+
+
+def test_unsupported_only_request_returns_semantic_matches_with_warning(
+    loaded_client, extraction
+):
+    request = "A tense orbital rescue currently available on Netflix"
+    extraction[request] = {
+        "semantic_query": "space rescue",
+        "unsupported_requirements": ["Current Netflix availability"],
+    }
+    data = loaded_client.post("/api/recommendations", json={"request": request}).json()
+    assert data["status"] == "matches"
+    assert [m["source_id"] for m in data["movies"]] == [
+        "fixture:orbital",
+        "fixture:river",
+        "fixture:garden",
+    ]
+    assert data["interpretation"]["unsupported_requirements"] == [
+        "Current Netflix availability"
+    ]
+    assert "not checked" in data["message"].lower()
+
+
+def test_unsupported_warning_does_not_bypass_supported_ambiguity(
+    loaded_client, extraction
+):
+    request = "A short movie on Netflix, from that decade"
+    extraction[request] = {
+        "unsupported_requirements": ["Current Netflix availability"],
+        "clarification": ["Which decade do you mean?"],
+    }
+    data = loaded_client.post("/api/recommendations", json={"request": request}).json()
+    assert data["status"] == "clarification"
+    assert data["movies"] == []
+    assert data["interpretation"]["clarification"] == ["Which decade do you mean?"]
+    assert data["interpretation"]["unsupported_requirements"] == [
+        "Current Netflix availability"
+    ]
+    assert len(OpenAIHandler.calls) == 1

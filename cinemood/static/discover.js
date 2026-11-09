@@ -35,7 +35,15 @@ function showInterpretation(data) {
   interpretation.append(paragraph(`Current restrictions: ${restrictionSummary(parsed)}`));
   interpretation.append(paragraph(`Mood / themes: ${parsed.semantic_query}`));
   if (data.applied_change) interpretation.append(paragraph(`Selected change: ${data.applied_change}. Other restrictions preserved.`));
-  for (const item of parsed.unsupported_requirements) interpretation.append(paragraph(`Not checked: ${item}`));
+  if (parsed.unsupported_requirements.length) {
+    const warning = document.createElement('div');
+    warning.className = 'warning';
+    warning.setAttribute('role', 'note');
+    warning.setAttribute('aria-label', 'Unchecked requirements');
+    warning.append(paragraph('Some requirements could not be checked. Results and eligible counts use only the supported restrictions.'));
+    for (const item of parsed.unsupported_requirements) warning.append(paragraph(`Not checked: ${item}`));
+    interpretation.append(warning);
+  }
   for (const question of parsed.clarification) interpretation.append(paragraph(`Please clarify: ${question}`));
 }
 
