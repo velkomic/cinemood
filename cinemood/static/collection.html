@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CineMood · My collection</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/collection.js" defer></script>
+</head>
+<body>
+  <header><a href="/" class="brand">CineMood<span> / a small discovery experiment</span></a><nav aria-label="Main"><a href="/">Discover</a><a href="/collection" aria-current="page">My collection</a></nav></header>
+  <main>
+    <p class="eyebrow">MY COLLECTION</p>
+    <h1>Stories to<br>come back to.</h1>
+    <p class="intro">Your saved choices, in this browser.</p>
+    <p class="scope">Clearing cookies or browser data loses access to this collection. Use the same browser and site address to return. Collections do not transfer across devices; private browsing may discard them when closed.</p>
+    <p id="collection-status" role="status" aria-live="polite">Loading your collection…</p>
+    <button id="collection-retry" type="button" hidden>Try again</button>
+    <section id="collection-results" aria-label="Saved movies" aria-busy="true"></section>
+  </main>
+  <footer>
+    <a href="https://www.themoviedb.org"><img src="/static/tmdb-logo.svg" width="100" height="13" alt="TMDB"></a>
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+    <p>Optional original fictional fixtures: <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</a>.</p>
+  </footer>
+</body>
+</html>

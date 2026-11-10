@@ -4,7 +4,7 @@ A small semantic movie discovery demo: FastAPI serves Discover and a REST API;
 PostgreSQL/pgvector stores catalog facts and performs exact cosine retrieval.
 Load the four **fictional CC0 films** for an independent fixture demo, or use the
 [bounded, resumable TMDB importer](docs/ingestion.md) for real movies. [Interpreted restrictions and explicit no-match alternatives](docs/constraints.md)
-are supported; generated explanations and collections belong to later tickets.
+are supported, along with streamed explanations and [personal collections](docs/collections.md).
 
 ## Start from a clean checkout
 
@@ -41,7 +41,7 @@ docker compose logs app
 docker compose down
 ```
 
-`down` preserves the database volume. To **delete this local catalog**, use
+`down` preserves the database volume. To **delete this local catalog and collections**, use
 `docker compose down --volumes`. Provider keys stay on the server; do not commit
 `.env`. Changing the embedding provider endpoint, model, dimensions, or document
 version requires reloading compatible catalog embeddings.
@@ -102,6 +102,7 @@ uv run python -m pytest tests/test_discover.py -q
 uv run python -m pytest tests/test_constraints.py -q
 uv run python -m pytest tests/test_fixture_command.py -q
 uv run python -m pytest tests/test_ingestion_command.py -q
+uv run python -m pytest tests/test_collections.py -q
 uv run python -m pytest -q
 docker stop cinemood-test-db
 ```
@@ -125,6 +126,8 @@ In another terminal, with a disposable local PostgreSQL/pgvector database:
 export DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55432/postgres
 export OPENAI_BASE_URL=http://127.0.0.1:18080/v1
 export OPENAI_API_KEY=test-only
+export COLLECTION_ORIGIN=http://localhost:8000
+export COLLECTION_ALLOW_HTTP=true
 uv run python -m cinemood migrate
 uv run python -m cinemood load-fixtures
 uv run uvicorn cinemood.app:app --host 127.0.0.1 --port 8000
@@ -136,8 +139,10 @@ wiring and SQL ordering, **not measured AI relevance**. The test server is not
 included in the application image. For a browser check, submit a request and
 verify three cards, resize to a narrow viewport, then submit `provider failure`
 and verify the useful error and enabled search button. Streamed explanations are available in Discover. Cards remain if generation
-fails, and Cancel search discards pending text. The save/remove journey remains
-T5 work. See the [POST event contract](docs/streaming.md).
+fails, and Cancel search discards pending text. Save a card, open My collection,
+reload, and remove it. Collections survive server restarts in the same browser;
+clearing browser data loses access. See the [collection contract](docs/collections.md)
+and [POST event contract](docs/streaming.md).
 
 To repeat the deterministic desktop/mobile stream smoke after installing Chromium:
 

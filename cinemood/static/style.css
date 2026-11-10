@@ -18,7 +18,9 @@ button span { margin-left: 32px; }
 button:disabled { opacity: .5; cursor: wait; }
 .scope { color: #aeb7b4; font-size: 12px; max-width: 650px; line-height: 1.6; }
 #status { margin: 36px 0 18px; color: #cbd4c8; font-size: 14px; }
-#results { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+#results, #collection-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+nav { display: flex; gap: 24px; margin-top: 18px; font-size: 14px; }
+nav a[aria-current="page"] { color: #bdce97; }
 article { padding: 24px; background: #222c2e; border-top: 2px solid #bdce97; border-radius: 3px; }
 h2 { font-family: Georgia, serif; font-weight: 400; font-size: 26px; }
 article p { font-size: 14px; line-height: 1.7; color: #c2c9c6; }

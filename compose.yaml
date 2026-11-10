@@ -22,6 +22,8 @@ services:
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       TMDB_READ_TOKEN: ${TMDB_READ_TOKEN:-}
       TMDB_SNAPSHOT_DIR: /data/snapshots
+      COLLECTION_ORIGIN: ${COLLECTION_ORIGIN:-http://localhost:8000}
+      COLLECTION_ALLOW_HTTP: ${COLLECTION_ALLOW_HTTP:-true}
     volumes:
       - tmdb-snapshots:/data/snapshots
     depends_on:

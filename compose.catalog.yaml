@@ -2,5 +2,7 @@
 # Use with: docker compose -p cinemood-t2-live -f compose.yaml -f compose.catalog.yaml
 services:
   app:
+    environment:
+      COLLECTION_ORIGIN: ${COLLECTION_ORIGIN:-http://localhost:58000}
     ports: !override
       - '127.0.0.1:58000:8000'

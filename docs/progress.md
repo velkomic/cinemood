@@ -2,7 +2,7 @@
 
 ## Active milestone
 
-T5 ([#6: Keep an isolated personal collection](https://github.com/velkomic/cinemood/issues/6)) is the next unblocked slice; its blocker #2 is closed. T5 implementation has not started and belongs in a fresh implementation chat.
+T5 ([#6: Keep an isolated personal collection](https://github.com/velkomic/cinemood/issues/6)) is in implementation and verification; its blocker #2 is closed. REST checks and deterministic browser save/list/remove checks pass; final restart, full-suite and independent review evidence will be recorded below. Owner acceptance and tracker closure remain pending.
 
 T4 ([#5: Stream grounded explanations and evaluate recommendations](https://github.com/velkomic/cinemood/issues/5)) is complete, accepted by the owner and **closed on GitHub**. The reconciled assessment is **17/20 acceptable**, based on the owner's case-by-case review and verified requested fixes, conservatively excluding cases 13, 14 and 18. This is not a new full evaluation run or a verbatim numeric score supplied by the owner. Final verification: **166 integration checks**, desktop/mobile browser smoke and static checks. The supplementary 27/27 figure measures explanation completion only; known semantic failures remain excluded and documented. See `evaluation/CLOSURE.md`.
 
@@ -13,7 +13,7 @@ T1 complete, published, and closed with accepted local verification: [Discover m
 ## Verified state
 
 - Repository contains a README and agent setup instructions.
-- T1 local implementation is present; verification evidence is recorded below. T2 implementation and its verification status are recorded below; T3 implementation and verification are recorded below; T4 implementation/evaluation evidence is recorded below; T5–T6 have not been implemented.
+- T1–T4 implementation and verification evidence is recorded below. T5 implementation/verification is in progress; T6 has not been implemented.
 - GitHub issue search returned no open issues at the start of planning.
 - Cupcake search returned no CineMood context at the start of planning.
 - The `gh` CLI is unavailable in this environment. Connected GitHub tools verified `velkomic/cinemood` and created the specification and six implementation issues, all labelled `ready-for-agent`. Relationship metadata uses the documented issue-body fallback because native relationship tools are unavailable.
@@ -55,9 +55,8 @@ T1 complete, published, and closed with accepted local verification: [Discover m
 
 ## Next step
 
-Start T4 (#5) in a fresh implementation chat. Read its full tracker issue, parent specification, accepted T3 refinements and the evidence below. Define/document the POST stream event contract before implementation; use the agreed REST/real-database and browser boundaries for deterministic stream/failure/cancellation checks. Predefine the 20-request evaluation expectations before collecting live results, then record the human judgments and bounded live timing/token-cost sample. Optional LangSmith tracing is not a gate. Do not start collections (#6) or paid AWS (#7) inside this slice. #6 remains independently available.
+Complete T5 (#6) verification and review, then present it for owner acceptance. Do not start paid AWS (#7) inside this slice. T6 needs its separate resource/cost approval before provisioning. The published ticket and evidence below are the handoff; prior T4 acceptance and its known evaluation limitations remain recorded.
 
-#4 is closed with all criteria checked and a completion comment. #3 and #4 now satisfy #5's documented blocker convention. Implementation/evidence commits remain local; no push or hosted CI pass is claimed. The retained app and catalog remain at `http://localhost:58000`.
 
 ## Session handoff
 
@@ -282,3 +281,13 @@ The repository documentation and published ticket are the durable context; the p
 - Verified repository identity as `velkomic/cinemood` through the connected GitHub tool, fetched current #5 and its empty comments, and posted the completion explanation. Checked the acceptance criteria (optional LangSmith remains disabled), appended the owner-acceptance/tally/limitations note and closed #5 with reason `completed`. GitHub returned **closed**, reason **completed**, and **one comment**. Completion comment: https://github.com/velkomic/cinemood/issues/5#issuecomment-6768490557.
 - Closure evidence retains all original and supplementary outputs, the human review, exact tally, excluded failures, latency/token-cost accounting limits, **166 passing integration checks**, browser/static checks and independent review. Implementation commits through `8b658d6` remain local. No additional tests, live provider calls, application changes, remote push, hosted CI claim, ingestion, AWS operation or new tracing were needed for closure.
 - Fetched #6, **Keep an isolated personal collection**, and confirmed its blocker #2 is closed. #6 remains open and ready-for-agent; it is the next slice, not started by this closure turn. The existing local 1,000-movie demonstration remains available on port 58000. Only closure/evaluation/progress documentation is committed; unrelated pre-existing untracked files are preserved.
+
+
+## T5 implementation evidence — 2026-11-10
+
+- Read AGENTS.md and its referenced tracker/domain/project/architecture/ADR/roadmap/specification/milestone/progress documents. Refetched full parent #1, #6 and its empty comments, and confirmed blocker #2 is closed. #6 is open and ready-for-agent. Cupcake returned no additional CineMood context. Starting commit: `7b918e37bf6f1afc87edcbe0ab985a6743d8ea7d`.
+- Implemented anonymous collection ownership with random 256-bit cookies and server-side SHA-256 digests; HTTPS uses a host-only `__Host-` Secure/HttpOnly/SameSite=Strict cookie with one-year persistence. Explicit development HTTP settings use a separate cookie name. Mutations require an exact configured Origin; owner IDs are never accepted from URLs or request bodies. Successful responses are not cacheable.
+- Migration 003 adds collection and item records, composite uniqueness, and foreign keys with cascading reference deletion. Parameterized SQL scopes every item read/removal to the cookie-derived digest. A key-share lock protects existing catalog IDs through save commit; concurrent duplicate saves converge with ON CONFLICT. Listing reads current movie facts with sorted genre aggregation and deterministic latest-save ordering. Collection access makes no provider calls. Details and configuration are in `collections.md`.
+- Applied TDD at the already agreed REST/real-PostgreSQL seam. The save/list/remove tracer failed with missing endpoints before implementation, then passed. Focused collection file: **20 passed in 22.09s**, including two identities, idempotence/concurrency, invalid and unknown IDs, FK cascade after externally arranged catalog deletion, application recreation/cookie loss, HTTPS cookie settings, origin rejection and safe database failure. Only external OpenAI HTTP fixtures replace services; no private-helper tests or mocked database.
+- Deterministic Chromium smoke passed streamed search → save → collection → reload → remove, second browser-context isolation, failed-remove retention/retry, failed-list recovery, empty states, desktop/mobile layout, plus existing stream validation/cancellation/selection/error checks. No browser JavaScript errors or mobile horizontal overflow. Session artifacts: `/tmp/cinemood-stream-browser.json`, `/tmp/cinemood-stream-desktop.png`, `/tmp/cinemood-stream-mobile.png`, `/tmp/cinemood-collection-mobile.png` (not committed).
+- Full-suite, actual database restart and independent Standards/Spec review results follow below when complete. No live provider call, ingestion, AWS provisioning, hosted CI, remote push or tracker mutation is claimed. Pre-existing untracked project/domain/planning documents remain outside this ticket's commit.

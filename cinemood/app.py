@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
 from cinemood.catalog import ROOT, connect, count_candidates, has_catalog, retrieve
+from cinemood.collections import collection_router
 from cinemood.config import Settings
 from cinemood.constraints import InterpretationInvalid, interpret
 from cinemood.embeddings import ProviderUnavailable, embed
@@ -40,6 +41,7 @@ def create_app() -> FastAPI:
     selections = SelectionStore()
     capacity = BoundedSemaphore(4)
     app.add_middleware(RequestSizeLimit)
+    app.include_router(collection_router(settings))
 
     app.mount(
         "/static", StaticFiles(directory=ROOT / "cinemood" / "static"), name="static"
@@ -48,6 +50,10 @@ def create_app() -> FastAPI:
     @app.get("/")
     def discover_page() -> FileResponse:
         return FileResponse(ROOT / "cinemood" / "static" / "index.html")
+
+    @app.get("/collection")
+    def collection_page() -> FileResponse:
+        return FileResponse(ROOT / "cinemood" / "static" / "collection.html")
 
     @app.get("/health")
     def health() -> dict[str, str]:

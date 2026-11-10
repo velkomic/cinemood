@@ -28,6 +28,8 @@ os.environ.update(
     DATABASE_URL=make_conninfo(**params),
     OPENAI_API_KEY="test-only",
     OPENAI_BASE_URL=f"http://127.0.0.1:{provider.server_port}/v1",
+    COLLECTION_ORIGIN="http://127.0.0.1:58004",
+    COLLECTION_ALLOW_HTTP="true",
 )
 OpenAIHandler.explanations = {
     "quiet comfort": {
@@ -122,6 +124,52 @@ try:
         )
         assert page.locator("#results img").count() == 0
         assert page.evaluate("window.injected === undefined")
+        page.get_by_role("button", name="Save to collection", exact=True).first.click()
+        page.get_by_role("button", name="Saved to collection", exact=True).wait_for()
+        page.get_by_role("link", name="My collection", exact=True).click()
+        page.locator("#collection-results article").wait_for()
+        assert (
+            page.locator("#collection-results h2").inner_text() == "The Lantern Kitchen"
+        )
+        page.reload()
+        page.locator("#collection-results article").wait_for()
+        assert "1 saved movie" in page.locator("#collection-status").inner_text()
+        other = browser.new_context()
+        other_page = other.new_page()
+        other_page.goto("http://127.0.0.1:58004/collection")
+        other_page.get_by_text("Your collection is empty.", exact=False).wait_for()
+        assert other_page.locator("#collection-results article").count() == 0
+        other.close()
+
+        def unavailable(route):
+            route.fulfill(
+                status=503,
+                content_type="application/json",
+                body='{"detail":"Collection unavailable. Please try again."}',
+            )
+
+        page.route("**/api/collection/*", unavailable)
+        page.get_by_role("button", name="Remove", exact=True).click()
+        page.get_by_text(
+            "Collection unavailable. Please try again.", exact=True
+        ).wait_for()
+        assert page.locator("#collection-results article").count() == 1
+        page.unroute("**/api/collection/*")
+        page.get_by_role("button", name="Remove", exact=True).click()
+        page.get_by_text("Your collection is empty.", exact=False).wait_for()
+        page.route("**/api/collection", unavailable)
+        page.reload()
+        page.get_by_role("button", name="Try again", exact=True).wait_for()
+        assert "unavailable" in page.locator("#collection-status").inner_text()
+        page.unroute("**/api/collection")
+        page.get_by_role("button", name="Try again", exact=True).click()
+        page.get_by_text("Your collection is empty.", exact=False).wait_for()
+        page.set_viewport_size({"width": 390, "height": 844})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path="/tmp/cinemood-collection-mobile.png", full_page=True)
+        page.get_by_role("link", name="Discover", exact=True).click()
+        search("quiet comfort")
+        finished()
         page.screenshot(path="/tmp/cinemood-stream-desktop.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")

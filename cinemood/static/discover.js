@@ -75,19 +75,16 @@ function showResult(data, explanations) {
     suggestions.append(option);
   }
   for (const [index, movie] of data.movies.entries()) {
-    const card = document.createElement('article');
-    card.dataset.movieId = movie.id;
+    const card = catalogCard(movie);
     const number = paragraph(`0${index + 1} / CATALOG MATCH`);
     number.className = 'number';
-    const title = document.createElement('h2');
-    title.textContent = movie.title;
-    const facts = paragraph(`${movie.release_year ?? 'Year unknown'} · ${movie.runtime_minutes ?? 'Unknown'} min · ${movie.genres.join(' / ')}`);
-    facts.className = 'facts';
     const explanation = paragraph('Generating explanation…');
     explanation.className = 'explanation';
     const text = paragraph('');
     text.className = 'explanation-text';
-    card.append(number, title, facts, paragraph(movie.overview), explanation, text);
+    card.prepend(number);
+    card.append(explanation, text);
+    addCollectionAction(card, movie);
     results.append(card);
     explanations.set(movie.id, { label: explanation, text, complete: false });
   }
