@@ -65,7 +65,7 @@ class Interpretation(BaseModel):
     runtime_operator: Literal["lt", "lte"] | None
     year_min: Annotated[int, Field(ge=1800, le=2200)] | None
     year_max: Annotated[int, Field(ge=1800, le=2200)] | None
-    original_language: str | None
+    original_languages: Annotated[list[str], Field(max_length=20)]
     unsupported_requirements: Annotated[list[Text], Field(max_length=10)]
     clarification: Annotated[list[Text], Field(max_length=10)]
 
@@ -81,9 +81,10 @@ class Interpretation(BaseModel):
         if self.year_min is not None and self.year_max is not None:
             if self.year_min > self.year_max:
                 raise ValueError("Conflicting years")
-        if self.original_language is not None:
-            if self.original_language not in LANGUAGES:
-                raise ValueError("Unknown original language")
+        if any(language not in LANGUAGES for language in self.original_languages):
+            raise ValueError("Unknown original language")
+        if len(set(self.original_languages)) != len(self.original_languages):
+            raise ValueError("Duplicate original language")
         if len(set(genres)) != len(genres):
             raise ValueError("Duplicate genre")
         if not self.semantic_query.strip():
@@ -123,11 +124,16 @@ Extract only explicit hard restrictions. Never silently drop a restriction.
 Preserve mood/themes in semantic_query (use 'movie' if none), without relaxing them.
 Included genres mean ALL listed genres; excluded genres mean NONE.
 Allowed genre names: {", ".join(GENRES)}.
-Use ISO 639-1 original-language codes; original language is not subtitles or dubbing.
+Use original_languages as a list of ISO 639-1 codes: [] means unrestricted,
+["fr"] means French, ["en", "fr"] means English OR French. Explicit alternatives
+are a supported restriction, even if the visitor has not decided which they prefer.
+Never choose one language or request clarification just because several are allowed.
+Original language is not subtitles or dubbing.
 Runtime: 'under/below/less than N' means lt N; 'at most/up to/no longer than N'
 means lte N. Convert hours to minutes. Years are inclusive; normalize strict
 before/after to the preceding/following year. Null means no such restriction.
-Never guess an ambiguous comparison, language, genre OR, or conflicting bound:
+Never guess an ambiguous comparison, unspecified language, genre OR,
+or conflicting bound:
 put a concise question in clarification. Preserve conflicting genre/year values
 so validation can reject them. Unsupported factual requirements (e.g. streaming
 availability, actors, awards, age suitability, minimum runtime) must be listed in

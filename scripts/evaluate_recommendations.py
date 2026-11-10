@@ -14,10 +14,13 @@ import httpx
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--url", default="http://127.0.0.1:58005")
 parser.add_argument("--output", type=Path, required=True)
+parser.add_argument("--cases", type=Path, default=Path("evaluation/requests.json"))
 args = parser.parse_args()
 if args.output.exists():
     parser.error("Output already exists; preserve the original evaluation.")
-requests = json.loads(Path("evaluation/requests.json").read_text())
+requests = json.loads(args.cases.read_text())
+if not 1 <= len(requests) <= 20:
+    parser.error("An evaluation must contain 1–20 fixed cases.")
 args.output.parent.mkdir(parents=True, exist_ok=True)
 # Published standard USD rates; report estimates, not settled invoices.
 # Recheck rates before a future run. No cache discounts are assumed.

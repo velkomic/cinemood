@@ -1,6 +1,6 @@
 # T4 fixed recommendation evaluation
 
-Status: **human review pending**. The agent proposes 16/20 acceptable cases; this is not a human-reviewed acceptance result. Cases 11, 13, 14 and 18 are proposed failures. Do not close #5 on the strength of this preliminary score.
+Status: **owner review received on 2026-11-10; requested follow-ups in progress**. The historical agent proposal was 16/20, with proposed failures at 11, 13, 14 and 18. The owner supplied qualitative feedback on all 20 cases, accepted most recommendations, and requested natural wording, explanation-failure fixes and multiple original languages. See [HUMAN_REVIEW.md](HUMAN_REVIEW.md). No numeric human score or ticket acceptance is inferred. The original expectations and captures below remain unchanged.
 
 The 20 prompts and expected outcomes in `requests.json` were fixed before any calls. The first live sample (`live-2026-11-09.jsonl`) was stopped after 11 completed cases and one interrupted request because every explanation was rejected. Three additional bounded diagnostic calls isolated enclosing quote characters in generated evidence strings. The subsequent full run (`live-2026-11-09-fixed.jsonl`) uses the same prompts and expectations after a technical validation/prompt fix; this is not a new acceptance set. No retries, ingestion, catalog changes, model changes, reranking, similarity cutoff, or AWS operations were performed.
 
@@ -84,7 +84,7 @@ Explanation: This may fit the mood because the overview centers on Charlie being
 
 Evidence: ["two senior students, Sam and her stepbrother Patrick, become his mentors", "discover the joys of friendship, music and love", "a wallflower, always watching life from the sidelines"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 2: A tense science fiction survival story in space
 
@@ -116,7 +116,7 @@ Explanation: This looks like a possible fit for a tense science fiction survival
 
 Evidence: ["wakes up on a spaceship light years from home with no recollection of who he is or how he got there", "solve the riddle of the mysterious substance causing the sun to die out", "save everything on Earth from extinction"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 3: A thoughtful story about memory and identity
 
@@ -148,7 +148,7 @@ Catalog overview: The night after another unsatisfactory New Year's party, Tim's
 
 Explanation unavailable; provisional text discarded.
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 4: An adventurous animated film with a hopeful feeling
 
@@ -182,7 +182,7 @@ Explanation: This may fit an adventurous, hopeful mood because the story follows
 
 Evidence: ["sets out to Paris in hopes of reuniting with her grandmother", "She is accompanied by two con men", "to pass her off as the Grand Duchess Anastasia"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 5: A romantic comedy, no horror
 
@@ -214,7 +214,7 @@ Explanation: This seems like a possible fit for romantic and comedic themes beca
 
 Evidence: ["odd solace", "in each other's company", "Two lost souls visiting Tokyo"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 6: A crime thriller with no comedy
 
@@ -248,7 +248,7 @@ Explanation: This looks like a possible fit for a crime thriller because the sto
 
 Evidence: ["abducted", "takes justice into his own hands", "the search descends into obsession and moral compromise"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 7: A drama under 90 minutes
 
@@ -282,7 +282,7 @@ Explanation: This could fit if the mood/theme is simply “movie,” because the
 
 Evidence: ["In the final months of World War II", "orphaned when their mother is killed during an air raid in Kobe, Japan", "Seita and Setsuko struggle to survive"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 8: An animated film at most 90 minutes
 
@@ -316,7 +316,7 @@ Explanation: This could fit a movie mood/theme if you want an adventure centered
 
 Evidence: ["a young woman disguises herself as a soldier", "Facing ruthless invaders, brutal training", "she must decide who she truly is"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 9: A science fiction film released from 2010 through 2020
 
@@ -348,7 +348,7 @@ Explanation: This could fit if you want a large-scale action-driven movie center
 
 Evidence: ["an ancient alpha predator arises from the sea", "malevolent adversaries that threaten the survival of humanity", "The creatures leave colossal destruction in their wake"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 10: A drama originally in French
 
@@ -374,7 +374,7 @@ Explanation: This could fit a movie mood because it centers on an unexpected con
 
 Evidence: ["A true story of two men who should never have met", "a quadriplegic aristocrat who was injured in a paragliding accident", "a young man from the projects"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 11: A Japanese animated film
 
@@ -402,7 +402,7 @@ Catalog overview: Ashitaka, a prince of the disappearing Emishi people, is curse
 
 Explanation unavailable; provisional text discarded.
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 12: A comedy released before 2000, no romance
 
@@ -436,7 +436,7 @@ Explanation: This could fit a reflective or reality-questioning mood because the
 
 Evidence: ["picture-perfect seaside town", "his entire existence may be staged and observed", "a vast unseen audience"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 13: A comforting movie on Netflix
 
@@ -470,7 +470,7 @@ Explanation: This could fit a comforting movie mood because it centers on a gent
 
 Evidence: ["Hachi endears himself to the family", "grows to be Parker's loyal companion", "a beautiful relationship unfolds"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 14: A drama starring Tom Hanks
 
@@ -504,7 +504,7 @@ Explanation: This looks like a possible fit for a drama mood because the overvie
 
 Evidence: ["a beautiful relationship unfolds", "their bond grows deeper", "loyal companion"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 15: A film under 1 minute
 
@@ -516,7 +516,7 @@ Interpretation: `{"semantic_query": "movie", "included_genres": [], "excluded_ge
 
 Offered changes: Change runtime from under 1 minute to under 65 minutes (+64 minutes) (1 eligible)
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 16: A movie released from 1800 through 1801 under 1 minute
 
@@ -526,7 +526,7 @@ Observed: `no_match`. No single-constraint change produces catalog matches. Plea
 
 Interpretation: `{"semantic_query": "movie", "included_genres": [], "excluded_genres": [], "runtime_minutes": 1, "runtime_operator": "lt", "year_min": 1800, "year_max": 1801, "original_language": null, "unsupported_requirements": [], "clarification": []}`
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 17: A comedy but exclude comedy
 
@@ -534,7 +534,7 @@ Expected: clarification; no cards.
 
 Observed: `clarification`. Please clarify or edit your request; interpretation was incomplete or invalid.
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 18: A drama released from 2020 through 1990
 
@@ -568,7 +568,7 @@ Explanation: This could fit a general movie mood/theme in a broad sense because 
 
 Evidence: ["work together to battle corporate interference", "the laws of physics, and their own personal demons", "take on the dominating race cars of Enzo Ferrari"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 19: A movie in English or French; I have not decided which original language
 
@@ -578,7 +578,7 @@ Observed: `clarification`. Please clarify or edit your request before searching.
 
 Interpretation: `{"semantic_query": "movie", "included_genres": [], "excluded_genres": [], "runtime_minutes": null, "runtime_operator": null, "year_min": null, "year_max": null, "original_language": null, "unsupported_requirements": [], "clarification": ["Do you want the original language to be English or French?"]}`
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).
 
 ### Case 20: A quiet reflective drama about grief, no horror
 
@@ -612,4 +612,4 @@ Explanation: This could fit a quiet reflective mood about grief because the over
 
 Evidence: ["orphaned when their mother is killed during an air raid in Kobe, Japan", "move into an abandoned bomb shelter", "Seita and Setsuko struggle to survive"]
 
-Human judgment: **pending**.
+Owner feedback: recorded by case in [HUMAN_REVIEW.md](HUMAN_REVIEW.md).

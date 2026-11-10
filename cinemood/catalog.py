@@ -159,7 +159,7 @@ def eligible_filter(
         AND (%s::integer IS NULL OR m.runtime_minutes {runtime_operator} %s)
         AND (%s::integer IS NULL OR m.release_year >= %s)
         AND (%s::integer IS NULL OR m.release_year <= %s)
-        AND (%s::text IS NULL OR m.original_language = %s)
+        AND (cardinality(%s::text[]) = 0 OR m.original_language = ANY(%s::text[]))
         AND NOT EXISTS (
             SELECT 1 FROM unnest(%s::text[]) wanted(name)
             WHERE NOT EXISTS (
@@ -182,8 +182,8 @@ def eligible_filter(
         constraints.year_min,
         constraints.year_max,
         constraints.year_max,
-        constraints.original_language,
-        constraints.original_language,
+        constraints.original_languages,
+        constraints.original_languages,
         constraints.included_genres,
         constraints.excluded_genres,
         bool(constraints.included_genres or constraints.excluded_genres),

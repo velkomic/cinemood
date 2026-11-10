@@ -167,7 +167,7 @@ def test_options_are_distinct_stably_ordered_and_capped_at_three(
         "runtime_operator": "lte",
         "year_min": 2020,
         "year_max": 2022,
-        "original_language": "fr",
+        "original_languages": ["fr"],
         "included_genres": ["Drama"],
     }
     options = loaded_client.post(
@@ -358,7 +358,7 @@ def test_pending_selection_capacity_is_atomic_and_preserves_displayed_options(
     loaded_client, extraction
 ):
     # The documented store limit is 128 pending displayed options for 15 minutes.
-    extraction["quiet comfort"] = {"original_language": "de"}
+    extraction["quiet comfort"] = {"original_languages": ["de"]}
     first_token = None
     for _ in range(127):
         response = loaded_client.post(
@@ -391,7 +391,7 @@ def test_pending_selection_capacity_is_atomic_and_preserves_displayed_options(
 def test_selection_from_a_previous_app_instance_requires_a_new_search(
     loaded_client, extraction
 ):
-    extraction["quiet comfort"] = {"original_language": "de"}
+    extraction["quiet comfort"] = {"original_languages": ["de"]}
     data = loaded_client.post(
         "/api/recommendations", json={"request": "quiet comfort"}
     ).json()

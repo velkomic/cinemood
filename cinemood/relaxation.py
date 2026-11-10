@@ -99,8 +99,8 @@ def changes(
         year = candidate_summary(conn, settings, without_max).earliest_year
         if year is not None and original.year_max < year <= 2200:
             yield ConstraintChange("year_max", year)
-    if original.original_language is not None:
-        yield ConstraintChange("original_language", None)
+    if original.original_languages:
+        yield ConstraintChange("original_languages", [])
     for genre in sorted(original.included_genres):
         remaining = [g for g in original.included_genres if g != genre]
         yield ConstraintChange("included_genres", remaining)
@@ -186,10 +186,11 @@ def validate_and_describe_change(
         if old is None or new is None or new <= old:
             raise SelectionInvalid
         label = f"Change latest year from {old} to {new} ({new - old} years later)"
-    elif field == "original_language":
-        if original.original_language is None or revised.original_language is not None:
+    elif field == "original_languages":
+        if not original.original_languages or revised.original_languages:
             raise SelectionInvalid
-        label = f"Change original language from {original.original_language} to any"
+        languages = " or ".join(original.original_languages)
+        label = f"Change original languages from {languages} to any"
     elif field == "included_genres":
         removed = set(original.included_genres) - set(revised.included_genres)
         if len(removed) != 1 or revised.included_genres != [

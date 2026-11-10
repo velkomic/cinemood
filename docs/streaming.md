@@ -41,9 +41,15 @@ Python worker thread.
 Bounds: 16 KiB body, 2,000 request characters, four admitted requests per app
 process (no queue), 75 seconds total, 30 seconds per explanation, zero retries,
 400 output tokens per movie, 3 movies, 6,000 streamed JSON characters per movie,
-1,200 explanation characters and 1–3 exact overview evidence quotes. A single
-ASCII quotation-mark pair around an evidence string is removed before the exact
-substring check. Missing, refused, truncated, malformed, wrong-ID, or invalid-evidence output is discarded.
+1,200 explanation characters and 1–3 numbered overview references. The server
+splits the overview into literal excerpts, sends numbered excerpts with the movie,
+and constrains the provider JSON Schema to that movie ID and those reference IDs.
+The application validates the final schema, finish reason, movie ID and reference
+bounds again, then resolves references to exact catalog text in the public
+`evidence` field. Copied quotation strings, invented/out-of-range references,
+extra fields, refused/truncated/malformed output and oversized responses fail.
+The former copied-quotation matching contract is superseded by this 2026-11-10
+reliability fix; the public event shape is unchanged.
 These structural checks cannot prove semantic grounding; the fixed human review
 assesses every claim. Model text uses textContent only. No database migration,
 ranking change, extra retrieval, automatic relaxation, or generated save ID.
@@ -54,3 +60,8 @@ The OpenAI finish-reason and final usage handling follows the
 [official streaming reference](https://developers.openai.com/api/reference/resources/chat/subresources/completions/streaming-events).
 Measurements describe server emission; the evaluation runner separately records
 client reception. Initial status is progress, not model time to first token.
+
+The explanation JSON Schema follows the [official structured-output guide](https://developers.openai.com/api/docs/guides/structured-outputs).
+Schema-constrained references establish source identity and format; they do not
+prove that every sentence is entailed by its selected excerpt. Human grounding
+review remains necessary.

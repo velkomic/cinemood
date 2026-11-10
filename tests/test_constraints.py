@@ -25,7 +25,7 @@ def test_runtime_boundary_and_interpretation(loaded_client):
             ["fixture:lantern", "fixture:river"],
         ),
         ({"year_min": 2020, "year_max": 2021}, ["fixture:lantern", "fixture:orbital"]),
-        ({"original_language": "fr"}, ["fixture:garden"]),
+        ({"original_languages": ["fr"]}, ["fixture:garden"]),
         ({"included_genres": ["Drama", "Adventure"]}, ["fixture:river"]),
         (
             {"included_genres": ["Drama"], "excluded_genres": ["Comedy"]},
@@ -53,7 +53,7 @@ def test_sql_filters_before_ranking(loaded_client, extraction, changes, expected
         {"runtime_minutes": True, "runtime_operator": "lte"},
         {"runtime_minutes": 90, "runtime_operator": "gt"},
         {"included_genres": ["Drama'; DROP TABLE movies; --"]},
-        {"original_language": "zz"},
+        {"original_languages": ["zz"]},
         {"_omit": "excluded_genres"},
         {"_refusal": "Cannot interpret this request."},
         {"_content": "{broken"},
@@ -82,7 +82,7 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
         "runtime_operator": "lt",
         "included_genres": ["Drama"],
         "excluded_genres": ["Adventure"],
-        "original_language": "en",
+        "original_languages": ["en"],
         "unsupported_requirements": ["Current Netflix availability"],
     }
     extraction["gentle short drama"] = original
@@ -139,8 +139,8 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
             ["fixture:garden"],
         ),
         (
-            {"original_language": "de"},
-            "original_language",
+            {"original_languages": ["de"]},
+            "original_languages",
             4,
             ["fixture:lantern", "fixture:garden", "fixture:river"],
         ),
@@ -210,7 +210,7 @@ def test_unknown_genres_do_not_satisfy_exclusions(
 def test_selection_cannot_apply_forged_or_unshown_changes(
     loaded_client, extraction, tamper
 ):
-    extraction["quiet comfort"] = {"original_language": "de"}
+    extraction["quiet comfort"] = {"original_languages": ["de"]}
     data = loaded_client.post(
         "/api/recommendations", json={"request": "quiet comfort"}
     ).json()
@@ -284,7 +284,7 @@ def test_unsupported_requirements_warn_without_dropping_supported_filters(
     request = "A gentle movie on Netflix, in English, at most 90 minutes, no Comedy"
     extraction[request] = {
         "semantic_query": "quiet comfort",
-        "original_language": "en",
+        "original_languages": ["en"],
         "runtime_minutes": 90,
         "runtime_operator": "lte",
         "excluded_genres": ["Comedy"],
@@ -407,3 +407,104 @@ def test_runtime_warning_reconciliation_is_exact_and_conservative(
     )
     assert response.status_code == 200
     assert response.json()["interpretation"]["unsupported_requirements"] == expected
+
+
+def test_original_language_alternatives_are_or_filters(loaded_client, extraction):
+    extraction["French or Japanese drama"] = {
+        "original_languages": ["fr", "ja"],
+        "included_genres": ["Drama"],
+        "excluded_genres": ["Adventure"],
+    }
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "French or Japanese drama"}
+    ).json()
+    assert data["status"] == "matches"
+    assert data["interpretation"]["original_languages"] == ["fr", "ja"]
+    assert [movie["source_id"] for movie in data["movies"]] == ["fixture:garden"]
+
+
+@pytest.mark.parametrize(
+    "languages", [None, "en", ["zz"], ["en", "en"], ["en", 42], ["en"] * 21]
+)
+def test_invalid_language_lists_require_clarification(
+    loaded_client, extraction, languages
+):
+    extraction["bad languages"] = {"original_languages": languages}
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "bad languages"}
+    ).json()
+    assert data["status"] == "clarification"
+    assert data["movies"] == []
+
+
+def test_language_lists_combine_with_genres_and_runtime(loaded_client, extraction):
+    extraction["short English or French drama"] = {
+        "original_languages": ["en", "fr"],
+        "included_genres": ["Drama"],
+        "excluded_genres": ["Adventure"],
+        "runtime_minutes": 100,
+        "runtime_operator": "lte",
+    }
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "short English or French drama"}
+    ).json()
+    assert [m["source_id"] for m in data["movies"]] == ["fixture:lantern"]
+
+
+def test_relaxing_language_list_preserves_other_restrictions(loaded_client, extraction):
+    extraction["German or Italian drama"] = {
+        "original_languages": ["de", "it"],
+        "included_genres": ["Drama"],
+        "excluded_genres": ["Adventure"],
+        "unsupported_requirements": ["Netflix"],
+    }
+    original = loaded_client.post(
+        "/api/recommendations", json={"request": "German or Italian drama"}
+    ).json()
+    assert original["interpretation"]["original_languages"] == ["de", "it"]
+    option = next(
+        option
+        for option in original["suggestions"]
+        if option["field"] == "original_languages"
+    )
+    assert option["label"] == "Change original languages from de or it to any"
+    assert option["interpretation"]["original_languages"] == []
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={"request": "German or Italian drama", "selection": option["selection"]},
+    ).json()
+    assert [m["source_id"] for m in selected["movies"]] == [
+        "fixture:lantern",
+        "fixture:garden",
+    ]
+    assert selected["original_interpretation"]["original_languages"] == ["de", "it"]
+    assert selected["interpretation"]["original_languages"] == []
+    assert selected["interpretation"]["excluded_genres"] == ["Adventure"]
+    assert selected["interpretation"]["unsupported_requirements"] == ["Netflix"]
+
+
+def test_runtime_relaxation_preserves_all_allowed_languages(loaded_client, extraction):
+    extraction["very short French or Japanese"] = {
+        "original_languages": ["fr", "ja"],
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+    }
+    first = loaded_client.post(
+        "/api/recommendations", json={"request": "very short French or Japanese"}
+    ).json()
+    option = next(
+        option
+        for option in first["suggestions"]
+        if option["field"] == "runtime_minutes"
+    )
+    assert option["interpretation"]["original_languages"] == ["fr", "ja"]
+    assert option["interpretation"]["runtime_minutes"] == 106
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={
+            "request": "very short French or Japanese",
+            "selection": option["selection"],
+        },
+    ).json()
+    assert [m["source_id"] for m in selected["movies"]] == ["fixture:garden"]
+    assert selected["interpretation"]["original_languages"] == ["fr", "ja"]

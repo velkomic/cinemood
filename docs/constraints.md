@@ -5,7 +5,8 @@ It interprets the English request through LangChain structured output using
 `gpt-5.4-mini-2026-03-17`, reasoning disabled, a 1,500-token output limit,
 15-second provider timeout, and no retries. Mood/themes become `semantic_query`;
 eligible movies are ranked using its embedding. Selection reuses that same query.
-No explanation generation or streaming is implemented in this slice.
+The streaming endpoint uses the same interpretation and selection rules; see
+[streaming.md](streaming.md).
 
 ## Semantics
 
@@ -16,9 +17,14 @@ No explanation generation or streaming is implemented in this slice.
   Hours are interpreted as minutes. Only a maximum runtime is supported.
 - Year limits are inclusive: `year_min <= release_year <= year_max`.
   Strict before/after phrases normalize to the preceding/following year.
-- Original language is an ISO 639-1 code, not subtitles or dubbing.
+- `original_languages` is a list of up to 20 distinct ISO 639-1 codes, not
+  subtitles or dubbing. `[]` means unrestricted; `["fr"]` means French;
+  `["en", "fr"]` means English OR French. Explicit language alternatives do
+  not require clarification, even when the visitor has not chosen between them.
+  This owner-approved 2026-11-10 refinement replaces the singular request field.
+  The movie record still has one `original_language`; no catalog migration is needed.
 - Unknown metadata cannot prove a required restriction. The existing schema
-  rejects missing runtime/year/language at ingestion; language equality rejects
+  rejects missing runtime/year/language at ingestion; language-list membership rejects
   empty/unknown codes, and genre-filtered queries require at least one genre.
 - Mood and themes influence vector ranking; they are not factual guarantees.
   Streaming availability, cast, awards, minimum runtime, and other unsupported
@@ -40,7 +46,7 @@ Successful responses contain `movies` (0–3), `message`, `original_request`,
 selection), `status` (`matches` or `no_match`), and `suggestions` (0–3).
 Interpretation fields are `semantic_query`, `included_genres`, `excluded_genres`,
 `runtime_minutes`, `runtime_operator` (`lt`/`lte`), `year_min`, `year_max`,
-`original_language`, `unsupported_requirements`, and `clarification`.
+`original_languages`, `unsupported_requirements`, and `clarification`.
 
 A maximum-runtime restriction remains supported even when no catalog movie can
 meet it. The extraction prompt forbids listing supported restrictions as unchecked.
@@ -70,7 +76,9 @@ restriction, remove only that restriction and query the compatible catalog:
   comparison (or the runtime itself for `<=`), within the 1–1,440 schema bounds.
 - Earliest year: lower to the greatest remaining release year, keeping the upper
   bound. Latest year: raise to the smallest remaining year, keeping the lower bound.
-- Language: allow any original language if that produces candidates.
+- Language: remove the complete allowed-language list only after an explicit
+  selection, if allowing any original language produces candidates. Other
+  suggestions preserve the full original list.
 - Genres: remove one required genre, trying names in alphabetical order.
 
 Every exact revision is validated and checked with the shared eligibility SQL.

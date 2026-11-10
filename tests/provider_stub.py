@@ -37,7 +37,7 @@ class OpenAIHandler(BaseHTTPRequestHandler):
                 "runtime_operator": None,
                 "year_min": None,
                 "year_max": None,
-                "original_language": None,
+                "original_languages": [],
                 "unsupported_requirements": [],
                 "clarification": [],
             }
@@ -134,7 +134,6 @@ class OpenAIHandler(BaseHTTPRequestHandler):
         context = json.loads(body["messages"][-1]["content"])
         movie = context["movie"]
         overrides = dict(self.explanations.get(context["mood_themes"], {}))
-        quote_evidence = overrides.pop("_quote_evidence", False)
         finish = overrides.pop("_finish", "stop")
         raw = overrides.pop("_raw", None)
         delay = overrides.pop("_delay", 0)
@@ -146,11 +145,9 @@ class OpenAIHandler(BaseHTTPRequestHandler):
         output = {
             "movie_id": movie["id"],
             "explanation": "This may fit your request: " + movie["overview"],
-            "evidence": [movie["overview"]],
+            "evidence_refs": [context["overview_evidence"][0]["id"]],
         }
         output.update(overrides)
-        if quote_evidence:
-            output["evidence"] = ['"' + quote + '"' for quote in output["evidence"]]
         output = raw if raw is not None else json.dumps(output, ensure_ascii=False)
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")

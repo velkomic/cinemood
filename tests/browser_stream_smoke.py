@@ -41,7 +41,12 @@ OpenAIHandler.explanations = {
     "cancel me": {"_delay": 0.04},
 }
 OpenAIHandler.interpretations = {
-    "under 1": {"runtime_minutes": 1, "runtime_operator": "lt"}
+    "under 1": {"runtime_minutes": 1, "runtime_operator": "lt"},
+    "English or French drama": {
+        "original_languages": ["en", "fr"],
+        "included_genres": ["Drama"],
+        "excluded_genres": ["Adventure"],
+    },
 }
 with psycopg.connect(admin, autocommit=True) as conn:
     conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
@@ -145,6 +150,17 @@ try:
         assert page.locator("#request").input_value() == "under 1"
         assert page.locator("#results article").count() == 1
         assert page.locator("#results h2").inner_text() == "River Workshop"
+
+        search("English or French drama")
+        finished()
+        assert (
+            "Original languages (any): en or fr"
+            in page.locator("#interpretation").inner_text()
+        )
+        assert page.locator("#results h2").all_text_contents() == [
+            "The Lantern Kitchen",
+            "Garden Letters",
+        ]
 
         # EOF after provisional text must discard it, including when a frame
         # is incomplete. The fixture response is obtained through the API.

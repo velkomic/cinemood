@@ -19,7 +19,7 @@ function restrictionSummary(parsed) {
   if (parsed.runtime_minutes !== null) restrictions.push(`${parsed.runtime_operator === 'lt' ? 'Under' : 'At most'} ${parsed.runtime_minutes} ${parsed.runtime_minutes === 1 ? 'minute' : 'minutes'}`);
   if (parsed.year_min !== null) restrictions.push(`Released from ${parsed.year_min} (inclusive)`);
   if (parsed.year_max !== null) restrictions.push(`Released through ${parsed.year_max} (inclusive)`);
-  if (parsed.original_language) restrictions.push(`Original language: ${parsed.original_language}`);
+  if (parsed.original_languages.length) restrictions.push(`Original ${parsed.original_languages.length === 1 ? 'language' : 'languages (any)'}: ${parsed.original_languages.join(' or ')}`);
   return restrictions.length ? restrictions.join(' · ') : 'No supported hard restrictions.';
 }
 

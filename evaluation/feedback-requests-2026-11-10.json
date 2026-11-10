@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "request": "A gentle, comforting story about friendship and community",
+    "expected": "matches; at least one comforting community/friendship story; avoid claiming guaranteed mood; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 2,
+    "request": "A tense science fiction survival story in space",
+    "expected": "matches; at least one space survival story; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 3,
+    "request": "A thoughtful story about memory and identity",
+    "expected": "matches; at least one memory/identity theme; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 5,
+    "request": "A romantic comedy, no horror",
+    "expected": "matches; all Romance AND Comedy; no Horror; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 7,
+    "request": "A drama under 90 minutes",
+    "expected": "matches; all Drama; runtime strictly <90; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 9,
+    "request": "A science fiction film released from 2010 through 2020",
+    "expected": "matches; all Science Fiction; 2010<=year<=2020; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 11,
+    "request": "A Japanese animated film",
+    "expected": "matches; all Animation; original_language ja; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 14,
+    "request": "A drama starring Tom Hanks",
+    "expected": "matches with visible actor unchecked warning; no casting claim; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  },
+  {
+    "id": 19,
+    "request": "A movie in English or French; I have not decided which original language",
+    "expected": "matches; original_languages [en, fr] with OR semantics; no clarification solely for alternative languages; every returned movie is English or French; all returned cards have completed grounded explanations in this bounded sample; natural direct wording with no generic fit verdicts"
+  }
+]

@@ -41,7 +41,18 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
         ]
         assert len(chunks) >= 2
         assert "".join(chunks) == final["text"]
-        assert final["evidence"] == [card["overview"]]
+        expected_evidence = {
+            "fixture:lantern": ["A tired cook opens a tiny neighborhood kitchen."],
+            "fixture:garden": [
+                "Two neighbors exchange letters across a shared garden, "
+                "finding friendship and hope after years of loneliness."
+            ],
+            "fixture:river": [
+                "An apprentice and a retired boat builder restore a river ferry, "
+                "learning trust as they navigate an unexpected storm."
+            ],
+        }
+        assert final["evidence"] == expected_evidence[card["source_id"]]
     assert [data["sequence"] for _, data in stream] == list(range(1, len(stream) + 1))
     assert len({data["request_id"] for _, data in stream}) == 1
     calls = stream[-1][1]["provider_calls"]
@@ -67,8 +78,15 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
     "overrides",
     [
         {"movie_id": 99999},
+        {"evidence_refs": [0]},
+        {"evidence_refs": [99999]},
+        {"evidence_refs": ["1"]},
+        {"evidence_refs": [True]},
+        {"evidence_refs": []},
+        {"evidence_refs": [1, 1, 1, 1]},
         {"evidence": ["Invented overview fact"]},
         {"evidence": ['"Invented overview fact"']},
+        {"evidence": ['" "']},
         {"_finish": "length"},
         {"_finish": "content_filter"},
         {"_raw": '{"explanation":"Tentative incomplete text'},
@@ -328,25 +346,6 @@ def test_provider_timeout_discards_explanation_and_terminates(
     assert stream[-1][0] == "complete"
 
 
-def test_exact_evidence_accepts_enclosing_quotation_marks(loaded_client, monkeypatch):
-    from provider_stub import OpenAIHandler
-
-    monkeypatch.setattr(
-        OpenAIHandler, "explanations", {"quiet comfort": {"_quote_evidence": True}}
-    )
-    stream = events(
-        loaded_client.post(
-            "/api/recommendations/stream", json={"request": "quiet comfort"}
-        )
-    )
-    completed = [data for name, data in stream if name == "explanation_complete"]
-    assert len(completed) == 3
-    assert completed[0]["evidence"] == [
-        "A tired cook opens a tiny neighborhood kitchen. "
-        "Shared meals and gentle humor help old friends reconnect."
-    ]
-
-
 def test_failed_interpretation_accounting_is_explicit(loaded_client, extraction):
     extraction["truncated extraction"] = {"_finish_reason": "length"}
     stream = events(
@@ -414,3 +413,40 @@ def test_disconnected_response_does_not_leak_admission(
         assert statuses == [200] * 6
 
     asyncio.run(scenario())
+
+
+def test_numbered_catalog_evidence_completes_without_copying_quotes(
+    loaded_client, extraction, monkeypatch
+):
+    from provider_stub import OpenAIHandler
+
+    extraction["quiet comfort"] = {"included_genres": ["Comedy"]}
+    monkeypatch.setattr(
+        OpenAIHandler,
+        "explanations",
+        {
+            "quiet comfort": {
+                "_raw": json.dumps(
+                    {
+                        "movie_id": 1,
+                        "explanation": (
+                            "Shared meals and gentle humor help old friends reconnect."
+                        ),
+                        "evidence_refs": [1, 2],
+                    }
+                )
+            }
+        },
+    )
+    stream = events(
+        loaded_client.post(
+            "/api/recommendations/stream", json={"request": "quiet comfort"}
+        )
+    )
+    completed = [data for name, data in stream if name == "explanation_complete"]
+    assert len(completed) == 1
+    assert completed[0]["evidence"] == [
+        "A tired cook opens a tiny neighborhood kitchen.",
+        "Shared meals and gentle humor help old friends reconnect.",
+    ]
+    assert not any(name == "explanation_error" for name, _ in stream)
