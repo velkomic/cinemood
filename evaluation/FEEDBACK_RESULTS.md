@@ -6,21 +6,30 @@ The unchanged prompts/expectations in `feedback-requests-2026-11-10.json` were f
 
 **Final bounded sample: 27/27 explanations completed across nine requests, with zero explanation fallbacks.** Every returned ID belongs to the server-selected records, every evidence excerpt occurs verbatim in that record, and independently checked supported genre/runtime/year/language restrictions hold. Language assertions use read-only catalog original-language fields. Case 19 allows English OR French, without requiring one result in each language.
 
+**Grounding failure found in follow-up case 14:** the `(500) Days of Summer`
+explanation says Tom spends the next 500 days looking back after being dumped.
+The overview's 500 days describe the relationship, not a post-breakup reflection
+period. That explanation is unsupported, so **case 14 is not a grounded pass**.
+The raw output is preserved below. The 27/27 figure establishes completion, not
+semantic correctness. The final prompt now explicitly preserves chronology,
+quantities, durations and causal relationships; that guidance is not a proven
+semantic filter, and no replacement run is used to erase this failure.
+
 The natural explanation prompt leads with concrete story details, removes generic fit verdicts, and retains specific uncertainty for unchecked facts such as cast. Structural references and the sample do not prove universal grounding or provider reliability. The original reversed-year expectation mismatch is recorded, not silently repaired or waived.
 
 Final recorded token-derived cost estimate: **USD 0.02996709**, with final accounting on all 9 requests. The earlier nine-case sample records USD 0.02978034. These exclude diagnostic/reproduction calls and are not total-session charges or settled invoices. No retries, catalog reload, embedding reindex, schema migration, external tracing, or AWS operations were involved.
 
-| Case | Catalog cards | Completed explanations | Original languages |
-| --- | ---: | ---: | --- |
-| 1 | 3 | 3 | unrestricted |
-| 2 | 3 | 3 | unrestricted |
-| 3 | 3 | 3 | unrestricted |
-| 5 | 3 | 3 | unrestricted |
-| 7 | 3 | 3 | unrestricted |
-| 9 | 3 | 3 | unrestricted |
-| 11 | 3 | 3 | ja |
-| 14 | 3 | 3 | unrestricted |
-| 19 | 3 | 3 | en, fr |
+| Case | Catalog cards | Completed explanations | Original languages | Grounding review |
+| --- | ---: | ---: | --- | --- |
+| 1 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 2 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 3 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 5 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 7 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 9 | 3 | 3 | unrestricted | No specific failure identified; no new human score |
+| 11 | 3 | 3 | ja | No specific failure identified; no new human score |
+| 14 | 3 | 3 | unrestricted | Failed: changed 500-day timeline |
+| 19 | 3 | 3 | en, fr | No specific failure identified; no new human score |
 
 ## Actual final outputs
 

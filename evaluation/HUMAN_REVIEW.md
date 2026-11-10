@@ -83,3 +83,13 @@ the first nine-case artifact with two fallbacks remains retained. Final results:
 no explanation fallbacks. See [FEEDBACK_RESULTS.md](FEEDBACK_RESULTS.md) for
 actual final text, evidence, costs, and limitations. Temporary tagged diagnostic logging is
 confined to an isolated disposable container and is removed after verification.
+
+
+Final independent review identified a semantic error in the new case-14 sample:
+the `(500) Days of Summer` explanation moved the 500-day relationship duration to
+a post-breakup reflection period. This response is **not accepted as grounded**.
+The original output remains visible; 27/27 means completion only. A concise final
+prompt rule preserves chronology, quantities, durations and causal relationships,
+but is not presented as proof that future claims are entailed. The original
+owner's case-14 feedback concerned an earlier response and does not accept this
+new erroneous sentence. No selective rerun replaces the failure.
