@@ -2,7 +2,7 @@
 
 ## Active milestone
 
-T5 ([#6: Keep an isolated personal collection](https://github.com/velkomic/cinemood/issues/6)) is implemented and locally verified: **187 passing integration checks**, deterministic desktop/mobile browser flow, actual PostgreSQL/application restart persistence, static checks, and independent Standards/Spec reviews with zero remaining findings. The retained 1,000-movie app is updated on port 58000. Owner acceptance and tracker closure remain pending; #6 stays open.
+T5 ([#6: Keep an isolated personal collection](https://github.com/velkomic/cinemood/issues/6)) is implemented and locally verified: **187 passing integration checks**, deterministic desktop/mobile browser flow, actual PostgreSQL/application restart persistence, static checks, and independent Standards/Spec reviews with zero remaining findings. The retained 1,000-movie app is updated on port 58000. The owner accepted T5 and requested closure; #6 is now **closed on GitHub** with all four acceptance criteria checked. T6 (#7) is the next slice; paid provisioning remains separately gated.
 
 T4 ([#5: Stream grounded explanations and evaluate recommendations](https://github.com/velkomic/cinemood/issues/5)) is complete, accepted by the owner and **closed on GitHub**. The reconciled assessment is **17/20 acceptable**, based on the owner's case-by-case review and verified requested fixes, conservatively excluding cases 13, 14 and 18. This is not a new full evaluation run or a verbatim numeric score supplied by the owner. Final verification: **166 integration checks**, desktop/mobile browser smoke and static checks. The supplementary 27/27 figure measures explanation completion only; known semantic failures remain excluded and documented. See `evaluation/CLOSURE.md`.
 
@@ -55,7 +55,7 @@ T1 complete, published, and closed with accepted local verification: [Discover m
 
 ## Next step
 
-Review the completed T5 (#6) demonstration for owner acceptance; implementation and verification are complete. Do not start paid AWS (#7) inside this slice. T6 needs its separate resource/cost approval before provisioning. The published ticket and evidence below are the handoff; prior T4 acceptance and its known evaluation limitations remain recorded.
+T5 (#6) is accepted and closed. Start T6 (#7) in a fresh implementation chat after reading its full tracker issue and checking blockers. T6 needs its separate concrete resource/cost approval before paid provisioning; no infrastructure is authorized by T5 closure. The published ticket and evidence below are the handoff; prior T4 acceptance and its known evaluation limitations remain recorded.
 
 
 ## Session handoff
@@ -299,3 +299,10 @@ The repository documentation and published ticket are the durable context; the p
 
 - Final complete suite, run once after the review fixes: **187 passed in 368.06s (6m 8s)** with `TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55433/postgres .venv/bin/python -m pytest -q --tb=short` against `pgvector/pgvector:0.8.2-pg16`, using disposable real PostgreSQL databases. Includes all 166 prior checks plus 21 collection checks. Full log: `/tmp/cinemood-t5-final-tests.log` (session artifact). No hosted CI result is claimed.
 - T5 implementation and local verification are complete. Initial implementation commit: `af836c7`; follow-up commit records identity-race fixes and final evidence. Standards: **zero remaining findings**. Spec: **zero remaining findings**. The disposable T5 test container and its anonymous storage were removed; the restart-check temporary database/cookie state were already removed. The separate port-8000 app and persistent real-catalog/snapshot volumes were preserved. No live provider call, ingestion, remote push, tracker mutation or AWS operation occurred. Owner acceptance/GitHub closure remain pending; do not start T6 provisioning without its explicit resource/cost approval.
+
+
+## T5 owner acceptance and tracker closure — 2026-11-10
+
+- The owner accepted the verified implementation and explicitly requested closure. Verified the repository remote as `velkomic/cinemood`, refetched current #6 and its empty comments through connected GitHub tools, posted the completion evidence, checked all four acceptance criteria, and closed #6 with reason `completed`. GitHub returned **closed**, reason **completed**, and **one comment**. Completion comment: https://github.com/velkomic/cinemood/issues/6#issuecomment-6773245260.
+- Evidence remains **187 passing integration checks**, deterministic desktop/mobile browser save/list/remove and identity-race checks, actual application/database restart persistence, static checks, and zero remaining Standards/Spec findings. Implementation commits `af836c7` and `837f212` remain local; no push or hosted CI pass is claimed. No new application changes, tests, provider calls, ingestion or AWS operations were needed for closure.
+- Updated project/progress status to accepted and closed. T6 (#7) is the next slice; read its current full issue and verify blockers before implementation. Its concrete paid-resource plan still requires explicit approval. Pre-existing untracked planning/domain files remain untouched.
