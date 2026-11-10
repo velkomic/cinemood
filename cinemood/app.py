@@ -1,8 +1,10 @@
+from collections.abc import Callable
+from threading import BoundedSemaphore
 from typing import Annotated
 
 import psycopg
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
@@ -18,6 +20,7 @@ from cinemood.relaxation import (
     select,
     suggestions,
 )
+from cinemood.streaming import recommendation_stream
 
 
 class DiscoverRequest(BaseModel):
@@ -35,6 +38,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="CineMood")
     settings = Settings.from_env()
     selections = SelectionStore()
+    capacity = BoundedSemaphore(4)
     app.add_middleware(RequestSizeLimit)
 
     app.mount(
@@ -56,9 +60,11 @@ def create_app() -> FastAPI:
                 status_code=503, detail="Database unavailable."
             ) from exc
 
-    @app.post("/api/recommendations")
-    def discover(body: DiscoverRequest) -> dict[str, object]:
+    def search_catalog(
+        body: DiscoverRequest, progress: Callable[[str], None]
+    ) -> dict[str, object]:
         try:
+            progress("interpretation")
             applied_change = None
             if body.selection is not None:
                 original, interpretation, applied_change = select(
@@ -88,6 +94,7 @@ def create_app() -> FastAPI:
                 "interpretation": interpretation.model_dump(),
                 "applied_change": applied_change,
             }
+            progress("retrieval")
             if not count_candidates(settings, interpretation):
                 offered = (
                     suggestions(body.request, original, settings, selections)
@@ -156,6 +163,30 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=503, detail="Catalog unavailable. Try again later."
             ) from exc
+
+    @app.post("/api/recommendations")
+    def discover(body: DiscoverRequest) -> dict[str, object]:
+        if not capacity.acquire(blocking=False):
+            raise HTTPException(429, "Too many active searches. Try again later.")
+        try:
+            return search_catalog(body, lambda stage: None)
+        finally:
+            capacity.release()
+
+    @app.post("/api/recommendations/stream")
+    async def stream(body: DiscoverRequest) -> StreamingResponse:
+        if not capacity.acquire(blocking=False):
+            raise HTTPException(429, "Too many active searches. Try again later.")
+        return StreamingResponse(
+            recommendation_stream(
+                lambda progress: search_catalog(body, progress), settings, capacity
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+            },
+        )
 
     return app
 

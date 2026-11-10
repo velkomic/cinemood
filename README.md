@@ -135,8 +135,31 @@ Kitchen and Orbital Rescue respectively. These controlled vectors demonstrate
 wiring and SQL ordering, **not measured AI relevance**. The test server is not
 included in the application image. For a browser check, submit a request and
 verify three cards, resize to a narrow viewport, then submit `provider failure`
-and verify the useful error and enabled search button. The full journey smoke
-with explanations/save/remove remains for its later slices.
+and verify the useful error and enabled search button. Streamed explanations are available in Discover. Cards remain if generation
+fails, and Cancel search discards pending text. The save/remove journey remains
+T5 work. See the [POST event contract](docs/streaming.md).
+
+To repeat the deterministic desktop/mobile stream smoke after installing Chromium:
+
+```bash
+TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55432/postgres \
+PYTHONPATH=.:tests uv run python tests/browser_stream_smoke.py
+```
+
+The frozen [20-request evaluation](evaluation/requests.json) separates live quality
+from deterministic correctness. With a local app configured for the reviewed
+catalog/provider, collect a new, uniquely named artifact (paid provider calls):
+
+```bash
+uv run python scripts/evaluate_recommendations.py --url http://127.0.0.1:8000 \
+  --output evaluation/new-run.jsonl
+```
+
+The runner never overwrites results, retries requests, loads movies or performs
+human review. Review expected outcomes before running; preserve failures and
+record human judgments separately. It limits the run to 20 requests and stops
+before another request after USD 0.50 in observed token estimates; this is not an
+account billing cap and interrupted calls can have unreported usage.
 
 ## SQL and architecture decisions
 

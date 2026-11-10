@@ -1,9 +1,11 @@
 import math
 
+import httpx
 from langchain_openai import OpenAIEmbeddings
 from pydantic import SecretStr
 
 from cinemood.config import DIMENSIONS, MODEL, Settings
+from cinemood.usage import embedding_response
 
 
 class ProviderUnavailable(Exception):
@@ -14,16 +16,18 @@ def embed(texts: list[str], settings: Settings) -> list[list[float]]:
     if not settings.api_key:
         raise ProviderUnavailable("Embedding provider is not configured.")
     try:
-        provider = OpenAIEmbeddings(
-            model=MODEL,
-            dimensions=DIMENSIONS,
-            api_key=SecretStr(settings.api_key),
-            base_url=settings.base_url,
-            timeout=15,
-            max_retries=0,
-            check_embedding_ctx_length=False,
-        )
-        vectors = provider.embed_documents(texts)
+        with httpx.Client(event_hooks={"response": [embedding_response]}) as client:
+            provider = OpenAIEmbeddings(
+                model=MODEL,
+                http_client=client,
+                dimensions=DIMENSIONS,
+                api_key=SecretStr(settings.api_key),
+                base_url=settings.base_url,
+                timeout=15,
+                max_retries=0,
+                check_embedding_ctx_length=False,
+            )
+            vectors = provider.embed_documents(texts)
         if len(vectors) != len(texts):
             raise ValueError("Missing embeddings")
         for vector in vectors:

@@ -17,6 +17,7 @@ from pydantic import (
 
 from cinemood.config import Settings
 from cinemood.embeddings import ProviderUnavailable
+from cinemood.usage import record
 
 GENRES = (
     "Action",
@@ -163,6 +164,7 @@ def interpret(request: str, settings: Settings) -> Interpretation:
         ).invoke([("system", PROMPT), ("human", request)])
         parsed = result.get("parsed")
         raw = result["raw"]
+        record("interpretation", "gpt-5.4-mini-2026-03-17", raw.usage_metadata)
         if (
             not isinstance(parsed, Interpretation)
             or raw.response_metadata.get("finish_reason") != "stop"

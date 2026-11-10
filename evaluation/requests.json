@@ -1,0 +1,22 @@
+[
+  {"id":1,"request":"A gentle, comforting story about friendship and community","expected":"matches; at least one comforting community/friendship story; avoid claiming guaranteed mood"},
+  {"id":2,"request":"A tense science fiction survival story in space","expected":"matches; at least one space survival story"},
+  {"id":3,"request":"A thoughtful story about memory and identity","expected":"matches; at least one memory/identity theme"},
+  {"id":4,"request":"An adventurous animated film with a hopeful feeling","expected":"matches; all Animation; at least one hopeful adventure"},
+  {"id":5,"request":"A romantic comedy, no horror","expected":"matches; all Romance AND Comedy; no Horror"},
+  {"id":6,"request":"A crime thriller with no comedy","expected":"matches; all Crime AND Thriller; no Comedy"},
+  {"id":7,"request":"A drama under 90 minutes","expected":"matches; all Drama; runtime strictly <90"},
+  {"id":8,"request":"An animated film at most 90 minutes","expected":"matches; all Animation; runtime <=90"},
+  {"id":9,"request":"A science fiction film released from 2010 through 2020","expected":"matches; all Science Fiction; 2010<=year<=2020"},
+  {"id":10,"request":"A drama originally in French","expected":"matches; all Drama; original_language fr"},
+  {"id":11,"request":"A Japanese animated film","expected":"matches; all Animation; original_language ja"},
+  {"id":12,"request":"A comedy released before 2000, no romance","expected":"matches; all Comedy; year<=1999; no Romance"},
+  {"id":13,"request":"A comforting movie on Netflix","expected":"matches with visible Netflix unchecked warning; no availability claim"},
+  {"id":14,"request":"A drama starring Tom Hanks","expected":"matches with visible actor unchecked warning; no casting claim"},
+  {"id":15,"request":"A film under 1 minute","expected":"no_match; catalog-backed runtime alternative; no automatic selection"},
+  {"id":16,"request":"A movie released from 1800 through 1801 under 1 minute","expected":"no_match; no single-change alternative; invite edit"},
+  {"id":17,"request":"A comedy but exclude comedy","expected":"clarification; no cards"},
+  {"id":18,"request":"A drama released from 2020 through 1990","expected":"clarification; no cards"},
+  {"id":19,"request":"A movie in English or French; I have not decided which original language","expected":"clarification; no guessed language; no cards"},
+  {"id":20,"request":"A quiet reflective drama about grief, no horror","expected":"matches; all Drama; no Horror; at least one reflective grief story"}
+]

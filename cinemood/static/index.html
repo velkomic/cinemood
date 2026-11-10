@@ -18,8 +18,9 @@
       <textarea id="request" name="request" maxlength="2000" required rows="3"
         placeholder="Something gentle about friendship and starting over…"></textarea>
       <button type="submit">Find movies <span aria-hidden="true">↗</span></button>
+      <button id="cancel" type="button" hidden>Cancel search</button>
     </form>
-    <p class="scope">This demo searches a small local movie catalog. Supported restrictions are shown before results. Explanations are not generated yet.</p>
+    <p class="scope">This demo searches a small local movie catalog. Supported restrictions are shown before results. Explanations stream from catalog details; they may be unavailable if generation fails.</p>
     <p id="status" role="status" aria-live="polite">Your next story starts with a request.</p>
     <section id="interpretation" aria-label="Interpreted request" hidden></section>
     <section id="suggestions" aria-label="Optional changes"></section>

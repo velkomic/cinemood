@@ -32,3 +32,6 @@ footer { padding: 24px 6vw; border-top: 1px solid #394143; color: #aeb7b4; font-
 #suggestions button { margin-top: 0; text-align: left; }
 
 .warning { margin-top: 16px; padding: 4px 16px; border-left: 3px solid #e6bc72; background: #302e25; color: #f3d8a6; }
+
+.explanation { font-weight: 650; }
+.explanation-text { white-space: pre-wrap; overflow-wrap: anywhere; }
