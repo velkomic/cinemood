@@ -2,9 +2,10 @@
 
 The owner reviewed all 20 cases in `RESULTS.md`. The comments below summarize the
 feedback, preserving the distinction between recommendation relevance, generated
-wording, and operational failures. No numeric human score is inferred from these
-qualitative comments, and the historical agent proposal is not relabelled as a
-human pass.
+wording, and operational failures. The original feedback is qualitative. The final [closure assessment](CLOSURE.md)
+maps those judgments and verified requested fixes to 17/20 acceptable cases,
+conservatively excluding 13, 14 and 18. This is not a verbatim numeric score from
+the owner, a new full run, or a relabelling of the historical agent proposal.
 
 | Case | Owner assessment | Requested follow-up |
 | --- | --- | --- |

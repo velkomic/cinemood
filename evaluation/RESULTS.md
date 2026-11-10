@@ -1,6 +1,6 @@
 # T4 fixed recommendation evaluation
 
-Status: **owner review received on 2026-11-10; requested follow-ups in progress**. The historical agent proposal was 16/20, with proposed failures at 11, 13, 14 and 18. The owner supplied qualitative feedback on all 20 cases, accepted most recommendations, and requested natural wording, explanation-failure fixes and multiple original languages. See [HUMAN_REVIEW.md](HUMAN_REVIEW.md). No numeric human score or ticket acceptance is inferred. The original expectations and captures below remain unchanged.
+Status: **owner review and requested fixes complete; [#5 closed as completed](https://github.com/velkomic/cinemood/issues/5)**. The reconciled assessment is **17/20 acceptable**, conservatively excluding cases 13, 14 and 18. See [CLOSURE.md](CLOSURE.md) for the per-case mapping from the owner's qualitative review and verified fixes. This is not a new full run or a verbatim numeric score from the owner. The historical agent proposal, original expectations and captures below remain retained; [HUMAN_REVIEW.md](HUMAN_REVIEW.md) records the full review.
 
 The 20 prompts and expected outcomes in `requests.json` were fixed before any calls. The first live sample (`live-2026-11-09.jsonl`) was stopped after 11 completed cases and one interrupted request because every explanation was rejected. Three additional bounded diagnostic calls isolated enclosing quote characters in generated evidence strings. The subsequent full run (`live-2026-11-09-fixed.jsonl`) uses the same prompts and expectations after a technical validation/prompt fix; this is not a new acceptance set. No retries, ingestion, catalog changes, model changes, reranking, similarity cutoff, or AWS operations were performed.
 
@@ -25,30 +25,30 @@ Recorded usage from the full run: **USD 0.04877384 estimated**. Final accounting
 
 Server timings and stage durations are retained in each terminal event. Client status timing is progress, not model first-token latency. Missing movie/text timings for no-match and clarification cases remain null. Rejected explanations correctly retain cards and discard provisional text; this fallback is correctness evidence, not proof of explanation quality.
 
-## Proposed judgments
+## Historical agent proposal — before owner review
 
 | Case | Proposed judgment | Reason |
 | --- | --- | --- |
-| 1 | Acceptable, pending human review | Friendship is well supported. Gentleness/comfort is an inference from brief overviews; human judgment is particularly important here. |
-| 2 | Acceptable, pending human review | Ad Astra and Project Hail Mary support the requested premise; After Earth falls back after evidence rejection. |
-| 3 | Acceptable, pending human review | Memory themes supported by Eternal Sunshine and Memento; About Time explanation falls back. |
-| 4 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 5 | Acceptable, pending human review | Genre restrictions hold; La La Land explanation falls back. |
-| 6 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 7 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 8 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 9 | Acceptable, pending human review | Genre/year restrictions hold; Super 8 explanation falls back. |
-| 10 | Acceptable, pending human review | Only two compatible French-language Drama records are returned, correctly without padding. |
+| 1 | Proposed acceptable (before owner review) | Friendship is well supported. Gentleness/comfort is an inference from brief overviews; human judgment is particularly important here. |
+| 2 | Proposed acceptable (before owner review) | Ad Astra and Project Hail Mary support the requested premise; After Earth falls back after evidence rejection. |
+| 3 | Proposed acceptable (before owner review) | Memory themes supported by Eternal Sunshine and Memento; About Time explanation falls back. |
+| 4 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 5 | Proposed acceptable (before owner review) | Genre restrictions hold; La La Land explanation falls back. |
+| 6 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 7 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 8 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 9 | Proposed acceptable (before owner review) | Genre/year restrictions hold; Super 8 explanation falls back. |
+| 10 | Proposed acceptable (before owner review) | Only two compatible French-language Drama records are returned, correctly without padding. |
 | 11 | Fail | All three explanations were rejected; cards alone do not demonstrate grounded explanation quality. |
-| 12 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
+| 12 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
 | 13 | Fail | The Iron Giant explanation contrasts protection with conflict; the overview does not establish an absence of conflict. Treat this as an unsupported claim. |
 | 14 | Fail | Unchecked actor preference leaks into semantic_query, and the (500) Days of Summer explanation may read as an unsupported negative casting claim. Warning visibility does not validate casting. |
-| 15 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 16 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 17 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
+| 15 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 16 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 17 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
 | 18 | Fail | Reversed 2020–1990 bounds were silently reordered to 1990–2020 instead of requiring clarification. |
-| 19 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
-| 20 | Acceptable, pending human review | Observed response meets the predefined outcome; details below. |
+| 19 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
+| 20 | Proposed acceptable (before owner review) | Observed response meets the predefined outcome; details below. |
 
 ## Reviewable outputs
 

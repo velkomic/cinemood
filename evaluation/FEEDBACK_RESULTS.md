@@ -1,6 +1,6 @@
 # T4 follow-up verification — 2026-11-10
 
-The owner feedback and accepted scope are recorded in [HUMAN_REVIEW.md](HUMAN_REVIEW.md). This is a supplementary nine-case verification run, not a replacement for the original 20-case human review or a newly inferred human score.
+The owner feedback and accepted scope are recorded in [HUMAN_REVIEW.md](HUMAN_REVIEW.md). The reconciled 20-case closure assessment is in [CLOSURE.md](CLOSURE.md); it excludes the case-14 grounding failure below. This is a supplementary nine-case verification run, not a replacement for the original 20-case human review or a newly inferred human score.
 
 The unchanged prompts/expectations in `feedback-requests-2026-11-10.json` were fixed before follow-up calls. The first run used case-insensitive quote recovery and still produced two fallbacks; `feedback-live-2026-11-10.jsonl` is retained. After diagnosis identified evidence-list/schema violations too, the final run uses native strict JSON Schema and server-resolved reference IDs. `feedback-live-references-2026-11-10.jsonl` retains every final event.
 
