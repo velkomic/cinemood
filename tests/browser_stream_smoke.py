@@ -96,6 +96,67 @@ try:
         time.sleep(0.03)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
+
+        # Two initial tabs must share one identity even if the second response
+        # arrives after the first tab has saved. Capture real requests so that
+        # an initially absent Cookie header cannot be silently repaired later.
+        tabs = browser.new_context()
+        pending = []
+        tabs.route("**/api/collection", lambda route: pending.append(route))
+        first_tab = tabs.new_page()
+        second_tab = tabs.new_page()
+        first_tab.goto(
+            "http://127.0.0.1:58004/collection", wait_until="domcontentloaded"
+        )
+        second_tab.goto(
+            "http://127.0.0.1:58004/collection", wait_until="domcontentloaded"
+        )
+        for _ in range(100):
+            if pending:
+                break
+            first_tab.wait_for_timeout(20)
+        assert pending
+        initial = pending[0].fetch()
+        pending[0].fulfill(response=initial)
+        first_tab.get_by_text("Your collection is empty.", exact=False).wait_for()
+        for _ in range(100):
+            if len(pending) == 2:
+                break
+            first_tab.wait_for_timeout(20)
+        assert len(pending) == 2
+        movie = tabs.request.post(
+            "http://127.0.0.1:58004/api/recommendations",
+            data={"request": "quiet comfort"},
+        ).json()["movies"][0]
+        assert (
+            first_tab.evaluate(
+                "async id => (await fetch(`/api/collection/${id}`, "
+                "{method: 'PUT'})).status",
+                movie["id"],
+            )
+            == 204
+        )
+        delayed = pending[1].fetch(
+            headers={
+                **pending[1].request.all_headers(),
+                "cookie": pending[1].request.header_value("cookie") or "",
+            }
+        )
+        pending[1].fulfill(response=delayed)
+        second_tab.locator("#collection-results[aria-busy=false]").wait_for(
+            state="attached"
+        )
+        tabs.unroute("**/api/collection")
+        first_tab.reload()
+        first_tab.locator("#collection-results[aria-busy=false]").wait_for(
+            state="attached"
+        )
+        assert first_tab.locator("#collection-results article").count() == 1
+        assert (
+            first_tab.locator("#collection-results h2").inner_text() == movie["title"]
+        )
+        tabs.close()
+
         page = browser.new_page(viewport={"width": 1280, "height": 1000})
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
@@ -134,6 +195,7 @@ try:
         page.reload()
         page.locator("#collection-results article").wait_for()
         assert "1 saved movie" in page.locator("#collection-status").inner_text()
+        page.screenshot(path="/tmp/cinemood-collection-desktop.png", full_page=True)
         other = browser.new_context()
         other_page = other.new_page()
         other_page.goto("http://127.0.0.1:58004/collection")
@@ -168,6 +230,7 @@ try:
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.screenshot(path="/tmp/cinemood-collection-mobile.png", full_page=True)
         page.get_by_role("link", name="Discover", exact=True).click()
+        page.set_viewport_size({"width": 1280, "height": 1000})
         search("quiet comfort")
         finished()
         page.screenshot(path="/tmp/cinemood-stream-desktop.png", full_page=True)

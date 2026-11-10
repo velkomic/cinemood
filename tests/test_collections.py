@@ -137,6 +137,12 @@ def test_collection_database_error_is_safe(monkeypatch):
         assert not visitor.cookies
 
 
+def test_cross_site_navigation_cannot_replace_collection_cookie(client):
+    response = client.get("/api/collection", headers={"Sec-Fetch-Site": "cross-site"})
+    assert response.status_code == 403
+    assert "set-cookie" not in response.headers
+
+
 def test_concurrent_saves_converge_on_one_item(loaded_client, monkeypatch):
     monkeypatch.setenv("COLLECTION_ORIGIN", "http://testserver")
     monkeypatch.setenv("COLLECTION_ALLOW_HTTP", "true")

@@ -46,6 +46,9 @@ enabled. The configured origin is independent of untrusted Host/forwarding heade
 - Mutation requests must include an Origin exactly equal to `COLLECTION_ORIGIN`;
   missing, `null`, and mismatched origins return `403` before database changes.
   Browsers supply this header on same-origin PUT/DELETE fetches.
+- Requests marked `Sec-Fetch-Site: cross-site` return `403`, including reads.
+  This prevents a direct cross-site API navigation from replacing a Strict
+  cookie that the browser withheld. Navigate to the My collection view instead.
 - IDs must be positive PostgreSQL bigint values (`422` otherwise). Database
   failures return a safe `503` message. Successful responses use `Cache-Control:
   no-store`; no identity is returned in JSON or accepted as a URL/body owner ID.
@@ -66,6 +69,12 @@ movie ID. Saves commit before a success response; application processes keep no
 ownership state. Existing persistent PostgreSQL volumes retain both tables
 through application/database restart. `docker compose down --volumes` deletes
 collections along with the catalog.
+
+The browser serializes identity requests across tabs with Web Locks, so a
+delayed first-visit response cannot replace the identity after another tab saves.
+This requires a current browser in a secure context (HTTPS, or localhost for
+local development). Unsupported contexts show an error and do not save using
+an unsafe fallback. API clients must retain their cookie between requests.
 
 ## Verification
 

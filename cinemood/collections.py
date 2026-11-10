@@ -34,6 +34,10 @@ def collection_router(settings: Settings) -> APIRouter:
     router = APIRouter()
 
     def operate(request: Request, movie_id: int | None = None) -> Response:
+        # Strict cookies are withheld on cross-site navigation. Never overwrite
+        # an existing browser identity just because that request omitted it.
+        if request.headers.get("sec-fetch-site") == "cross-site":
+            raise HTTPException(403, "Open My collection from this site.")
         if request.method != "GET" and request.headers.get("origin") != origin:
             raise HTTPException(
                 403, "Collection changes require the configured origin."

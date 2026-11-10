@@ -86,7 +86,9 @@ async function loadCollection() {
     collectionRetry.hidden = true;
   }
   try {
-    const data = await collectionRequest();
+    if (!navigator.locks) throw new Error('Collections need a current browser and HTTPS, or localhost for the local demo.');
+    // Cookie issuance must finish before another tab sends its initial GET.
+    const data = await navigator.locks.request('cinemood-collection-bootstrap', () => collectionRequest());
     savedMovieIds.clear();
     for (const movie of data.movies) savedMovieIds.add(movie.id);
     if (collectionResults) {
