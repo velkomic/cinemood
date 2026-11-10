@@ -345,3 +345,72 @@ def test_exact_evidence_accepts_enclosing_quotation_marks(loaded_client, monkeyp
         "A tired cook opens a tiny neighborhood kitchen. "
         "Shared meals and gentle humor help old friends reconnect."
     ]
+
+
+def test_failed_interpretation_accounting_is_explicit(loaded_client, extraction):
+    extraction["truncated extraction"] = {"_finish_reason": "length"}
+    stream = events(
+        loaded_client.post(
+            "/api/recommendations/stream", json={"request": "truncated extraction"}
+        )
+    )
+    calls = stream[-1][1]["provider_calls"]
+    assert len(calls) == 1
+    assert calls[0]["stage"] == "interpretation"
+    assert calls[0]["tokens"] is None
+
+
+@pytest.mark.parametrize("disconnect_at", ["headers", "body"])
+@pytest.mark.parametrize("spec_version", ["2.3", "2.4"])
+def test_disconnected_response_does_not_leak_admission(
+    loaded_client, disconnect_at, spec_version
+):
+    import asyncio
+
+    from starlette.requests import ClientDisconnect
+
+    from cinemood.app import create_app
+
+    app = create_app()
+
+    async def scenario():
+        statuses = []
+        body = json.dumps({"request": "quiet comfort"}).encode()
+        for _ in range(6):
+            delivered = False
+
+            async def receive():
+                nonlocal delivered
+                if not delivered:
+                    delivered = True
+                    return {"type": "http.request", "body": body, "more_body": False}
+                await asyncio.Event().wait()
+
+            async def send(message):
+                if message["type"] == "http.response.start":
+                    statuses.append(message["status"])
+                    if disconnect_at == "headers":
+                        raise OSError("client disconnected at headers")
+                elif message["type"] == "http.response.body":
+                    raise OSError("client disconnected during body")
+
+            scope = {
+                "type": "http",
+                "asgi": {"version": "3.0", "spec_version": spec_version},
+                "method": "POST",
+                "path": "/api/recommendations/stream",
+                "raw_path": b"/api/recommendations/stream",
+                "query_string": b"",
+                "headers": [(b"content-type", b"application/json")],
+                "scheme": "http",
+                "http_version": "1.1",
+                "server": ("test", 80),
+                "client": ("test", 123),
+            }
+            try:
+                await app(scope, receive, send)
+            except (ClientDisconnect, OSError):
+                pass
+        assert statuses == [200] * 6
+
+    asyncio.run(scenario())

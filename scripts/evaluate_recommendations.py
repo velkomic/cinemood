@@ -35,36 +35,49 @@ with args.output.open("x") as artifact, httpx.Client(timeout=85) as client:
             "first_movie": None,
             "first_explanation": None,
         }
-        with client.stream(
-            "POST",
-            args.url + "/api/recommendations/stream",
-            json={"request": case["request"]},
-        ) as response:
-            response.raise_for_status()
-            frame = []
-            for line in response.iter_lines():
-                if line:
-                    frame.append(line)
-                    continue
-                if not frame:
-                    continue
-                event = frame[0].removeprefix("event: ")
-                data = json.loads(frame[1].removeprefix("data: "))
-                events.append({"event": event, "data": data})
+        failure = None
+        response_status = None
+        frame = []
+        try:
+            with client.stream(
+                "POST",
+                args.url + "/api/recommendations/stream",
+                json={"request": case["request"]},
+            ) as response:
+                response_status = response.status_code
+                response.raise_for_status()
                 frame = []
-                key = {
-                    "status": "first_status",
-                    "explanation_delta": "first_explanation",
-                }.get(event)
-                if event == "result" and data.get("movies"):
-                    key = "first_movie"
-                if key and received[key] is None:
-                    received[key] = round((time.monotonic() - started) * 1000, 2)
+                for line in response.iter_lines():
+                    if line:
+                        frame.append(line)
+                        continue
+                    if not frame:
+                        continue
+                    event = frame[0].removeprefix("event: ")
+                    data = json.loads(frame[1].removeprefix("data: "))
+                    events.append({"event": event, "data": data})
+                    frame = []
+                    key = {
+                        "status": "first_status",
+                        "explanation_delta": "first_explanation",
+                    }.get(event)
+                    if event == "result" and data.get("movies"):
+                        key = "first_movie"
+                    if key and received[key] is None:
+                        received[key] = round((time.monotonic() - started) * 1000, 2)
+            if frame or not events or events[-1]["event"] not in ("complete", "error"):
+                failure = {"kind": "IncompleteStream"}
+        except (httpx.HTTPError, ValueError, IndexError, KeyError) as exc:
+            failure = {"kind": type(exc).__name__}
+        except KeyboardInterrupt:
+            failure = {"kind": "Interrupted"}
         received["total"] = round((time.monotonic() - started) * 1000, 2)
         terminal = events[-1]["data"] if events else {}
         calls = terminal.get("provider_calls", [])
         cost = 0.0
-        accounting_complete = bool(events) and events[-1]["event"] == "complete"
+        accounting_complete = (
+            failure is None and bool(events) and events[-1]["event"] == "complete"
+        )
         for call in calls:
             tokens = call["tokens"]
             if tokens is None:
@@ -86,6 +99,9 @@ with args.output.open("x") as artifact, httpx.Client(timeout=85) as client:
                     "estimated_usd_no_cache_discount": cost,
                     "accounting_complete": accounting_complete,
                     "human_judgment": None,
+                    "failure": failure,
+                    "http_status": response_status,
+                    "partial_frame": frame,
                 }
             )
             + "\n"
@@ -96,3 +112,7 @@ with args.output.open("x") as artifact, httpx.Client(timeout=85) as client:
             f"{received['total']} ms; cumulative estimate USD {cumulative_cost:.6f}",
             flush=True,
         )
+        if failure is not None:
+            # Preserve the attempted case before stopping; do not retry it or
+            # replace the failed run with a later successful sample.
+            break

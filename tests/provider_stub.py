@@ -170,7 +170,7 @@ class OpenAIHandler(BaseHTTPRequestHandler):
                                 {
                                     "index": 0,
                                     "delta": {
-                                        "role": "assistant",
+                                        **({"role": "assistant"} if start == 0 else {}),
                                         "content": output[start : start + 12],
                                     },
                                     "finish_reason": None,
@@ -192,6 +192,16 @@ class OpenAIHandler(BaseHTTPRequestHandler):
                         "created": 1,
                         "model": body["model"],
                         "choices": [{"index": 0, "delta": {}, "finish_reason": finish}],
+                    }
+                )
+                + "\n\ndata: "
+                + json.dumps(
+                    {
+                        "id": "explanation-fixture",
+                        "object": "chat.completion.chunk",
+                        "created": 1,
+                        "model": body["model"],
+                        "choices": [],
                         "usage": {
                             "prompt_tokens": 100,
                             "completion_tokens": 50,

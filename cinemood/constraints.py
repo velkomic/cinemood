@@ -2,7 +2,7 @@
 
 import re
 from fractions import Fraction
-from typing import Annotated, Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 from langchain_openai import ChatOpenAI
 from openai import ContentFilterFinishReasonError, LengthFinishReasonError
@@ -148,6 +148,7 @@ Return every schema field, including empty lists and nulls where appropriate.
 def interpret(request: str, settings: Settings) -> Interpretation:
     if not settings.api_key:
         raise ProviderUnavailable("Interpretation provider is not configured.")
+    usage: dict[str, Any] | None = None
     try:
         model = ChatOpenAI(
             model="gpt-5.4-mini-2026-03-17",
@@ -164,7 +165,7 @@ def interpret(request: str, settings: Settings) -> Interpretation:
         ).invoke([("system", PROMPT), ("human", request)])
         parsed = result.get("parsed")
         raw = result["raw"]
-        record("interpretation", "gpt-5.4-mini-2026-03-17", raw.usage_metadata)
+        usage = raw.usage_metadata
         if (
             not isinstance(parsed, Interpretation)
             or raw.response_metadata.get("finish_reason") != "stop"
@@ -192,3 +193,5 @@ def interpret(request: str, settings: Settings) -> Interpretation:
         raise ProviderUnavailable(
             "Interpretation provider is unavailable. Try again later."
         ) from exc
+    finally:
+        record("interpretation", "gpt-5.4-mini-2026-03-17", usage)

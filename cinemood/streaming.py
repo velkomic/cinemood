@@ -12,9 +12,11 @@ from uuid import uuid4
 
 import anyio
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 from langchain_core.utils.json import parse_partial_json
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints
+from starlette.types import Receive, Scope, Send
 
 from cinemood.config import Settings
 from cinemood.usage import provider_usage, record
@@ -137,12 +139,42 @@ async def explain(
         record("explanation", "gpt-5.4-mini-2026-03-17", usage)
 
 
+class RecommendationResponse(StreamingResponse):
+    """Hold admission until the response and its iterator have both closed."""
+
+    def __init__(
+        self, events: AsyncGenerator[str, None], capacity: BoundedSemaphore
+    ) -> None:
+        self.events = events
+        self.capacity = capacity
+        super().__init__(
+            events,
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    async def stream_response(self, send: Send) -> None:
+        # Close in the same task that iterates: Starlette can run this in a
+        # child task on ASGI 2.3. A failed send must not leave a suspended scope.
+        async with aclosing(self.events):
+            await super().stream_response(send)
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        context = provider_usage.set([])
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            provider_usage.reset(context)
+            self.capacity.release()
+
+
 async def recommendation_stream(
     search: Callable[[Callable[[str], None]], dict[str, Any]],
     settings: Settings,
-    capacity: BoundedSemaphore,
-) -> AsyncIterator[str]:
-    usage_context = provider_usage.set([])
+) -> AsyncGenerator[str, None]:
     started = monotonic()
     request_id = uuid4().hex
     sequence = 0
@@ -277,10 +309,13 @@ async def recommendation_stream(
             yield event(
                 "complete", {"status": result.get("status", "empty"), "usage": usage}
             )
+    except BaseExceptionGroup as exc:
+        # Closing while suspended inside a task group wraps GeneratorExit.
+        # It is a disconnect, so never attempt to emit another frame.
+        _, remaining = exc.split(GeneratorExit)
+        if remaining is not None:
+            raise remaining from exc
     except TimeoutError:
         yield event("error", {"message": "Search took too long. Please try again."})
     except Exception:
         yield event("error", {"message": "Search unavailable. Please try again."})
-    finally:
-        provider_usage.reset(usage_context)
-        capacity.release()

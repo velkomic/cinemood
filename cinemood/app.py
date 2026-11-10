@@ -4,7 +4,7 @@ from typing import Annotated
 
 import psycopg
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
@@ -20,7 +20,7 @@ from cinemood.relaxation import (
     select,
     suggestions,
 )
-from cinemood.streaming import recommendation_stream
+from cinemood.streaming import RecommendationResponse, recommendation_stream
 
 
 class DiscoverRequest(BaseModel):
@@ -174,18 +174,14 @@ def create_app() -> FastAPI:
             capacity.release()
 
     @app.post("/api/recommendations/stream")
-    async def stream(body: DiscoverRequest) -> StreamingResponse:
+    async def stream(body: DiscoverRequest) -> RecommendationResponse:
         if not capacity.acquire(blocking=False):
             raise HTTPException(429, "Too many active searches. Try again later.")
-        return StreamingResponse(
+        return RecommendationResponse(
             recommendation_stream(
-                lambda progress: search_catalog(body, progress), settings, capacity
+                lambda progress: search_catalog(body, progress), settings
             ),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache, no-transform",
-                "X-Accel-Buffering": "no",
-            },
+            capacity,
         )
 
     return app

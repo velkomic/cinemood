@@ -2,12 +2,12 @@
 
 `POST /api/recommendations/stream` accepts the same JSON as the existing
 `POST /api/recommendations` endpoint (which remains available for catalog-only
-clients). UTF-8 SSE is consumed with fetch, not EventSource. Validation errors
-use normal HTTP JSON responses (400/413/422); capacity returns 429.
+clients). UTF-8 SSE is consumed with fetch, not EventSource. Request size/schema errors use normal HTTP JSON responses (413/422); capacity
+returns 429. Invalid or expired selections produce a terminal stream error.
 After HTTP 200, failures use stream events, never a second HTTP response.
 
 Each frame is `event: NAME\ndata: JSON\n\n`. Every JSON object contains
-`request_id`, `sequence` (starting at 1), and `elapsed_ms` since admission.
+`request_id`, `sequence` (starting at 1), and `elapsed_ms` since stream generation starts.
 Network chunks are unrelated to frames or UTF-8 character boundaries.
 
 Ordered events:
@@ -24,11 +24,12 @@ Ordered events:
   explanation, retain its card and show explanation unavailable.
 - `complete`: terminal `status` (matches/no_match/clarification/empty),
   `timings_ms` (first_status, first_movie, first_explanation, total; null when
-  absent), `stages_ms`, and explanation `usage` totals. Usage is null if any
-  provider call lacks final accounting; `provider_calls` records per-stage model
-and token usage (including rejected explanations when final usage was received); interrupted calls may incur charges.
+  absent), `stages_ms`, and explanation `usage` totals. Explanation usage is null if any explanation call lacks final accounting;
+  `provider_calls` records per-stage model and token usage, including rejected
+  explanations when final usage was received. Failed extraction records unknown
+  usage explicitly. Interrupted calls may incur charges.
 - `error`: terminal safe `message`, timings and stages; retain cards, discard
-  explanations that have no explanation_complete. Never claim retrieval success.
+  explanations that have no explanation_complete. Extraction/retrieval errors never emit a successful catalog result.
 
 Exactly one complete/error terminates a connected stream. EOF before it is a
 failure: keep cards, discard tentative explanations. Abort on navigation or
@@ -42,8 +43,7 @@ process (no queue), 75 seconds total, 30 seconds per explanation, zero retries,
 400 output tokens per movie, 3 movies, 6,000 streamed JSON characters per movie,
 1,200 explanation characters and 1–3 exact overview evidence quotes. A single
 ASCII quotation-mark pair around an evidence string is removed before the exact
-substring check. Missing,
-refused, truncated, malformed, wrong-ID, or invalid-evidence output is discarded.
+substring check. Missing, refused, truncated, malformed, wrong-ID, or invalid-evidence output is discarded.
 These structural checks cannot prove semantic grounding; the fixed human review
 assesses every claim. Model text uses textContent only. No database migration,
 ranking change, extra retrieval, automatic relaxation, or generated save ID.
