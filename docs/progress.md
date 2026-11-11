@@ -1,5 +1,33 @@
 # Progress
 
+## Movie-card design interview — 2026-11-11
+
+- Final owner confirmation received for Q1–Q11. Published the full accepted
+  contract and acceptance criteria to #8 and verified its `ready-for-agent`
+  label. Added the shared contract and concurrent development/sequential page
+  integration plan to #9; it remains `needs-triage` for its own session design.
+  Reverified `velkomic/cinemood` and refreshed both issues before writing;
+  Cupcake again returned no additional context. No blockers for #8 were found.
+- The accepted plan is `plans/movie-card-lifecycle.md`. The documentation handoff
+  commits required existing project/agent context above frontend baseline
+  `8bf42e1`. Use that same handoff revision on both implementation branches.
+  No implementation or push occurred. The plan is the decision record; no new
+  glossary term or ADR was needed for this reversible in-process interface.
+- Accepted ownership of card presentation/lifecycle, page-wide single-card
+  Details selection, and concurrent #8/#9 implementation after agreement on a
+  shared interface and baseline. Decisions and remaining questions are in
+  `plans/movie-card-lifecycle.md`; both tickets remain `needs-triage`.
+- The owner additionally accepted group-managed cleanup, mutations surviving
+  display disposal, stable focus fallbacks and inclusion of collection reload
+  ordering safeguards (Q4–Q7). Exact contracts and verification remain under
+  review; no architecture implementation or tracker readiness change is claimed.
+- Committed the verified frontend baseline as `8bf42e1`. No push or architecture
+  refactor occurred. Removed the disposable verification database container.
+- Accepted Q8–Q10: group operations and generation-bound explanation updates,
+  shared per-movie action state, collection reload ordering, and deterministic
+  verification scenarios. The proposed concurrent file-ownership/integration
+  handoff awaits final confirmation in `plans/movie-card-lifecycle.md`.
+
 ## Frontend baseline commit preparation — 2026-11-11
 
 - The owner requested committing the existing visual rework before concurrent

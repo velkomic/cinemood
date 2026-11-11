@@ -1,0 +1,27 @@
+# TMDB data use and ingestion checks
+
+Checked 2026-11-09 against official TMDB sources. Documentation research only: no authenticated API requests, catalog ingestion, or account changes were performed.
+
+## Documented facts
+
+- **Noncommercial use:** the [TMDB FAQ](https://developer.themoviedb.org/docs/faq) permits free API use for noncommercial purposes with attribution. It defines commercial projects by a primary purpose of generating revenue for the owner. CineMood's stated portfolio/learning purpose appears consistent with that description; this is a planning assessment, not confirmation that its complete data-processing design is licensed.
+- **Attribution:** the same [FAQ](https://developer.themoviedb.org/docs/faq) requires an approved TMDB logo, less prominent than the application's branding, attribution in About/Credits, and the prominent notice: “This product uses the TMDB API but is not endorsed or certified by TMDB.” Use approved assets without prohibited alterations and link the TMDB name/logo to its website. The FAQ also says TMDB does not claim ownership of the API's data/images.
+- **Access:** [Getting Started](https://developer.themoviedb.org/docs/getting-started) directs an account holder to API settings and requires agreement to terms before a key is issued. [Application authentication](https://developer.themoviedb.org/docs/authentication-application) supports a v3 `api_key` query parameter or an API Read Access Token in the `Authorization: Bearer` header; both provide equivalent access. Credential availability and approval have not been verified.
+- **Selection and metadata:** the official [OpenAPI specification](https://developer.themoviedb.org/openapi/tmdb-api.json) documents `GET /3/discover/movie`, `sort_by=vote_count.desc`, `include_adult`, `language`, `page`, and the separate `with_original_language` filter. Discover returns movie IDs, overviews and vote counts. `GET /3/movie/{movie_id}` accepts `language` and exposes title, release date, genres (IDs/names), runtime, overview and original language. [Language guidance](https://developer.themoviedb.org/docs/languages) describes translated metadata and locale codes such as `en-US`.
+- **Rate handling:** [TMDB rate-limit guidance](https://developer.themoviedb.org/docs/rate-limiting) retires the old 40-per-10-second limit, describes changeable upper limits around 40 requests per second, and requires respecting HTTP 429. This is not a guaranteed quota.
+
+## Proposed technical approach after clearance
+
+Request `/3/discover/movie?sort_by=vote_count.desc&include_adult=false&language=en-US&page=1` and successive pages; omit `with_original_language` so films of any original language remain eligible. Fetch details with `language=en-US`. Validate usable English overview text and required movie fields locally, deduplicate by TMDB ID, skip invalid entries, and stop after 1,000 accepted movies. English localization is a request, not evidence that every returned overview is usable English; the documented discover filters do not guarantee this criterion. No live result count or availability was verified. These are implementation recommendations based on the [Discover contract](https://developer.themoviedb.org/reference/discover-movie), not a tested importer.
+
+Use conservative pacing, bounded retries/backoff on transient failures and 429, and durable progress checkpoints. Honor `Retry-After` if supplied; its presence is not promised by the cited rate-limit page. Define a request/page budget and report an incomplete catalog if exhausted. Pagination is not documented as a frozen ranking snapshot, so preserve fetched order/vote counts and deduplicate across retries rather than claim an atomic global ranking.
+
+## Unresolved permission checks and live-ingestion preflight
+
+The [API terms linked by Getting Started](https://www.themoviedb.org/documentation/api/terms-of-use) and [current terms URL](https://www.themoviedb.org/api-terms-of-use) were inaccessible to this research tool because of robots restrictions. The accessible official guides do **not** establish the following permissions or retention limits; absence of a statement is not permission:
+
+1. Local PostgreSQL storage of metadata/overviews: permitted caching scope, maximum retention, refresh, deletion and termination requirements.
+2. Private S3 raw-response snapshots and recovery backups: whether permitted, retention limits including older object versions/backups, and deletion obligations. Privacy of a bucket alone establishes none of these rights.
+3. Sending overviews to OpenAI for embeddings and explanation context, retaining derived vectors, and using those vectors for recommendations: any express AI/ML restriction, third-party processing permission, and whether inference/embeddings are distinguished from training. No express permission or prohibition for this workflow was verified from accessible official sources.
+
+**Proposed preflight check:** review the current account/API terms and record the relevant clauses before enabling live ingestion, persisted TMDB snapshots or transmission of TMDB text to OpenAI. Resolve any remaining ambiguity about the exact workflow with TMDB. This recommendation addresses incomplete source verification; it does not establish that the workflow is forbidden or requires special AI approval. Implementation using independently licensed fixtures can proceed. Record concrete retention/refresh/deletion rules across PostgreSQL, S3 and derived vectors before enabling the real source.

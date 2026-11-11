@@ -57,9 +57,14 @@ or published as a ticket. This work does not authorize T6 paid provisioning.
 The owner requested two architecture-review follow-ups for later work on
 2026-11-11: [shared movie-card lifecycle](https://github.com/velkomic/cinemood/issues/8)
 and [browser recommendation-session state](https://github.com/velkomic/cinemood/issues/9).
-Both are published backlog proposals labelled `needs-triage`; concrete interfaces
-and seam placement remain to be reviewed. The recommended order is #8 then #9,
-without a hard dependency. They do not expand MVP product scope or block T6.
+The owner completed #8's design review and approved its `ready-for-agent`
+publication. The accepted contract in `plans/movie-card-lifecycle.md` covers
+shared card presentation/lifecycle, page-wide Details selection, collection
+ordering safeguards, verification and concurrent #8/#9 module development with
+sequential page integration. #9 remains `needs-triage` pending its own session
+interface review. The frontend baseline is `8bf42e1`; both branches must use the
+same documentation handoff commit above it. These follow-ups do not expand MVP
+product scope or block T6. Implementation and push are outside this design task.
 
 The 2026-11-10 frontend redesign interview is captured in
 [`plans/frontend-redesign.md`](plans/frontend-redesign.md) and root `PRODUCT.md`.
