@@ -14,6 +14,7 @@ from cinemood.config import Settings
 from cinemood.constraints import InterpretationInvalid, interpret
 from cinemood.embeddings import ProviderUnavailable, embed
 from cinemood.http import RequestSizeLimit
+from cinemood.posters import poster_router
 from cinemood.relaxation import (
     SelectionCapacityExceeded,
     SelectionInvalid,
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
     capacity = BoundedSemaphore(4)
     app.add_middleware(RequestSizeLimit)
     app.include_router(collection_router(settings))
+    app.include_router(poster_router(settings))
 
     app.mount(
         "/static", StaticFiles(directory=ROOT / "cinemood" / "static"), name="static"

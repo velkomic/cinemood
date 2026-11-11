@@ -30,6 +30,7 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
         "fixture:lantern",
         "fixture:garden",
         "fixture:river",
+        "fixture:orbital",
     ]
     completed = [data for name, data in stream if name == "explanation_complete"]
     assert [data["movie_id"] for data in completed] == [card["id"] for card in cards]
@@ -43,6 +44,10 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
         assert "".join(chunks) == final["text"]
         expected_evidence = {
             "fixture:lantern": ["A tired cook opens a tiny neighborhood kitchen."],
+            "fixture:orbital": [
+                "A spacecraft engineer races against failing oxygen to rescue "
+                "a stranded orbital crew, solving dangerous mechanical puzzles."
+            ],
             "fixture:garden": [
                 "Two neighbors exchange letters across a shared garden, "
                 "finding friendship and hope after years of loneliness."
@@ -62,8 +67,9 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
         "explanation",
         "explanation",
         "explanation",
+        "explanation",
     ]
-    assert sum(call["tokens"]["total_tokens"] for call in calls) == 480
+    assert sum(call["tokens"]["total_tokens"] for call in calls) == 630
     timing = stream[-1][1]["timings_ms"]
     assert (
         0
@@ -91,7 +97,7 @@ def test_cards_precede_progressive_validated_explanations(loaded_client):
         {"_finish": "content_filter"},
         {"_raw": '{"explanation":"Tentative incomplete text'},
         {"explanation": ""},
-        {"explanation": "x" * 1300},
+        {"explanation": "x" * 421},
         {"_raw": "not json"},
         {"_http_status": 503},
     ],
@@ -107,8 +113,8 @@ def test_invalid_completed_explanation_keeps_cards(
             "/api/recommendations/stream", json={"request": "quiet comfort"}
         )
     )
-    assert len(next(data["movies"] for name, data in stream if name == "result")) == 3
-    assert len([name for name, _ in stream if name == "explanation_error"]) == 3
+    assert len(next(data["movies"] for name, data in stream if name == "result")) == 4
+    assert len([name for name, _ in stream if name == "explanation_error"]) == 4
     assert not any(name == "explanation_complete" for name, _ in stream)
     assert stream[-1][0] == "complete"
 
@@ -268,7 +274,7 @@ def test_network_cards_arrive_before_generation_and_disconnect_closes_provider(
         for name, data in read_frames(response):
             received.append(name)
             if name == "result":
-                assert len(data["movies"]) == 3
+                assert len(data["movies"]) == 4
                 assert "explanation_delta" not in received
             if name == "explanation_delta":
                 assert "explanation_complete" not in received

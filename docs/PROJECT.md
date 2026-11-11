@@ -14,7 +14,7 @@ Status: product interview and specification review complete. The specification a
 - Use EUR 10 total as the provisional target for initial ingestion, OpenAI experiments, and a short AWS demonstration. This target is not an automatic billing cap or authorization to provision resources.
 - Use a repeatable evaluation set of approximately 15–20 requests covering relevance, filter compliance where filters are supported, grounded explanations, and insufficient-match behavior.
 - Test behavior through the REST API, ingestion command, and one browser smoke flow. Assess relevance on 20 fixed human-reviewed requests with an initial target of at least 16 acceptable results; automate collection isolation, persistence, resumability, duplicate prevention, and recommendation-ID validity checks.
-- Retrieve candidate movies with pgvector and use LangChain/OpenAI to explain up to three recommendations. Render title, release year, genres, runtime, and overview from database records. Preserve retrieved results with an explanation-unavailable message if generation fails.
+- Retrieve candidate movies with pgvector and use LangChain/OpenAI to explain up to five recommendations. Render title, release year, genres, runtime, and overview from database records. Preserve retrieved results with an explanation-unavailable message if generation fails.
 - Treat progressive streamed responses as a priority for the recommendation experience; the event contract and validation approach remain to be agreed.
 - The owner-approved 2026-11-10 refinement allows a list of original languages
   with OR semantics (for example English or French), while retaining every
@@ -40,8 +40,59 @@ Python/FastAPI, PostgreSQL with pgvector, HTML/CSS/JavaScript, LangChain/OpenAI,
 - Review the current TMDB account/API terms for caching, private snapshots/backups, and third-party processing before live ingestion; accessible docs did not settle those clauses. See `research/tmdb-data-use.md`.
 - Proposed HTTPS and stable-origin solution: direct-IP certificate and Elastic IP retained through a seven-day demonstration window. Verify current regional pricing and local memory use before proposing paid provisioning. See `research/deployment-verification.md`.
 
+## Frontend redesign
+
+The owner selected **Screening lounge refined** on 2026-11-10 after reviewing
+concrete sketches: the lounge logo and recommendation columns, compact request
+entry, and text Details actions. The local implementation adds snapshot-derived
+posters, title-led image fallback, responsive details, controlled initial poster
+motion, and matching collection presentation while preserving the search and
+collection contracts. `progress.md` records verification and review evidence.
+Additional batches and contextual follow-ups remain separate specification work
+in `plans/frontend-redesign-spec-work.md`; no such search extension is implemented
+or published as a ticket. This work does not authorize T6 paid provisioning.
+
 ## Planning workflow
+
+The owner requested two architecture-review follow-ups for later work on
+2026-11-11: [shared movie-card lifecycle](https://github.com/velkomic/cinemood/issues/8)
+and [browser recommendation-session state](https://github.com/velkomic/cinemood/issues/9).
+Both are published backlog proposals labelled `needs-triage`; concrete interfaces
+and seam placement remain to be reviewed. The recommended order is #8 then #9,
+without a hard dependency. They do not expand MVP product scope or block T6.
+
+The 2026-11-10 frontend redesign interview is captured in
+[`plans/frontend-redesign.md`](plans/frontend-redesign.md) and root `PRODUCT.md`.
+The owner confirmed a wide dark cinematic direction, poster-led comparison,
+controlled ambient motion, compact follow-ups, and desktop side-panel/mobile
+full-screen film details. The owner has selected and authorized the refined lounge layout; extra result
+batches and contextual follow-ups need a behavior specification and ticket plan
+before implementation. These requirements are not verified capabilities.
 
 Use wayfinder to resolve the open decisions, then synthesize an agreed specification and vertical implementation tickets. GitHub Issues are the tracker; see `agents/issue-tracker.md`.
 
 Create architecture, roadmap, milestone plans, and ADRs as their contents are resolved. Record verified implementation separately in `progress.md`.
+
+
+## Owner UX refinement — 2026-11-10
+
+The owner requested and authorized four refreshable spotlight films with a browse
+control, local search-field focus, Enter/Shift+Enter semantics, inline selected-card
+synopsis/metadata/TMDB links replacing sidebar/modal details, up to five
+recommendations with compact explanations, tighter desktop dimensions, adaptive
+small result sets and polished save states. These refinements retain Screening
+lounge refined. They supersede the earlier three-result and side-panel design
+choices, while preserving supported restrictions, explicit relaxation, streaming
+fallback and anonymous collection ownership. Extra recommendation batches and
+contextual follow-ups remain separate specification work. See progress.md for
+verified evidence and runtime limitations; no tracker publication or paid-resource
+approval is implied.
+
+
+## Owner UX refinement — 2026-11-11
+
+The owner authorized five spotlight movies, stronger poster-derived background
+color, stable Save transitions, and navigation that hides on downward scroll and
+returns on upward scroll or pointer proximity to the viewport top. Keep the
+existing lounge design, responsive layout and reduced-motion support. This
+supersedes the four-film spotlight count; search and collection contracts remain.

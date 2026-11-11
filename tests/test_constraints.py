@@ -142,7 +142,7 @@ def test_no_match_offers_only_catalog_backed_single_changes(loaded_client, extra
             {"original_languages": ["de"]},
             "original_languages",
             4,
-            ["fixture:lantern", "fixture:garden", "fixture:river"],
+            ["fixture:lantern", "fixture:garden", "fixture:river", "fixture:orbital"],
         ),
         (
             {"included_genres": ["Horror", "Drama"]},
@@ -319,6 +319,7 @@ def test_unsupported_only_request_returns_semantic_matches_with_warning(
         "fixture:orbital",
         "fixture:river",
         "fixture:garden",
+        "fixture:lantern",
     ]
     assert data["interpretation"]["unsupported_requirements"] == [
         "Current Netflix availability"

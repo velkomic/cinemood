@@ -203,7 +203,7 @@ def retrieve(
                        e.embedding <=> %s::vector AS distance
                 FROM movies m JOIN movie_embeddings e ON e.movie_id = m.id
                 WHERE {predicate}
-                ORDER BY distance, m.id LIMIT 3
+                ORDER BY distance, m.id LIMIT 5
             )
             SELECT s.id, s.source_id, s.title, s.release_year,
                    s.runtime_minutes, s.overview,

@@ -22,6 +22,7 @@ def test_fixture_command_makes_catalog_cards_discoverable(loaded_client):
         "fixture:lantern",
         "fixture:garden",
         "fixture:river",
+        "fixture:orbital",
     ]
     assert movies[0] == {
         "id": movies[0]["id"],
@@ -73,6 +74,7 @@ def test_distinct_request_changes_vector_order(loaded_client):
         "fixture:orbital",
         "fixture:river",
         "fixture:garden",
+        "fixture:lantern",
     ]
 
 
@@ -117,7 +119,7 @@ def test_sql_shaped_text_is_only_embedding_input(loaded_client):
     )
     assert response.status_code == 200
     again = loaded_client.post("/api/recommendations", json={"request": "comfort"})
-    assert len(again.json()["movies"]) == 3
+    assert len(again.json()["movies"]) == 4
 
 
 def test_equal_distances_use_stable_movie_ids(loaded_client):
@@ -131,6 +133,7 @@ def test_equal_distances_use_stable_movie_ids(loaded_client):
         "fixture:lantern",
         "fixture:garden",
         "fixture:river",
+        "fixture:orbital",
     ]
     assert second["movies"] == first["movies"]
 
@@ -143,3 +146,48 @@ def test_changed_provider_does_not_search_incompatible_vectors(
         response = client.post("/api/recommendations", json={"request": "comfort"})
     assert response.status_code == 200
     assert response.json()["movies"] == []
+
+
+def test_five_recommendations_are_bounded_stable_and_streamed(
+    loaded_client, database_url
+):
+    from test_streaming import events
+
+    with psycopg.connect(database_url) as conn:
+        for index in range(2):
+            movie_id = conn.execute(
+                """INSERT INTO movies (source_id, title, overview, release_year,
+                    original_language, runtime_minutes, provenance)
+                   SELECT %s, title, overview, release_year, original_language,
+                          runtime_minutes, provenance FROM movies
+                   ORDER BY id LIMIT 1 RETURNING id""",
+                (f"fixture:extra-{index}",),
+            ).fetchone()[0]
+            conn.execute(
+                """INSERT INTO movie_embeddings
+                   (movie_id, model, provider_fingerprint, dimensions,
+                    document_version, content_hash, embedding)
+                   SELECT %s, model, provider_fingerprint, dimensions,
+                          document_version, content_hash, embedding
+                   FROM movie_embeddings ORDER BY movie_id LIMIT 1""",
+                (movie_id,),
+            )
+    response = loaded_client.post(
+        "/api/recommendations", json={"request": "equal distance"}
+    )
+    movies = response.json()["movies"]
+    assert len(movies) == 5
+    ids = [movie["id"] for movie in movies]
+    assert len(set(ids)) == 5
+    assert ids == sorted(ids)
+    stream = events(
+        loaded_client.post(
+            "/api/recommendations/stream", json={"request": "equal distance"}
+        )
+    )
+    assert [data["movies"] for name, data in stream if name == "result"] == [movies]
+    assert [
+        data["movie_id"] for name, data in stream if name == "explanation_complete"
+    ] == ids
+    assert not any(name == "explanation_error" for name, _ in stream)
+    assert stream[-1][0] == "complete"

@@ -161,10 +161,46 @@ try:
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto("http://127.0.0.1:58004")
+        page.locator(".preview-film").first.wait_for()
+        assert (
+            page.locator(".preview-track").evaluate(
+                "(el) => getComputedStyle(el).animationName"
+            )
+            == "drift"
+        )
+        page.locator("#request").focus()
+        assert (
+            page.locator(".preview-track").evaluate(
+                "(el) => getComputedStyle(el).animationPlayState"
+            )
+            == "paused"
+        )
+        page.emulate_media(reduced_motion="reduce")
+        assert (
+            page.locator(".preview-track").evaluate(
+                "(el) => getComputedStyle(el).animationName"
+            )
+            == "none"
+        )
+        page.emulate_media(reduced_motion="no-preference")
+        preview_opener = page.locator("#preview-track .poster-button").first
+        preview_opener.focus()
+        page.keyboard.press("Enter")
+        assert page.locator(".preview-film.is-expanded .movie-details").is_visible()
+        page.set_viewport_size({"width": 390, "height": 844})
+        assert page.locator(".preview-film.is-expanded .movie-details").is_visible()
+        assert page.locator("dialog").count() == 0
+        page.keyboard.press("Escape")
+        assert preview_opener.evaluate("(el) => el === document.activeElement")
+        page.set_viewport_size({"width": 1280, "height": 1000})
+        page.locator("#request").fill("quiet comfort")
+        page.locator("#request").press("Shift+Enter")
+        assert page.locator("#request").input_value() == "quiet comfort\n"
+        assert not page.locator("#discover button").first.is_disabled()
 
         def search(prompt):
             page.locator("#request").fill(prompt)
-            page.get_by_role("button", name="Find movies").click()
+            page.locator("#request").press("Enter")
 
         def finished():
             page.wait_for_function(
@@ -175,16 +211,65 @@ try:
         page.locator("#results article").first.wait_for()
         assert (
             page.locator(".explanation-text").all_text_contents()
-            != [OpenAIHandler.explanations["quiet comfort"]["explanation"]] * 3
+            != [OpenAIHandler.explanations["quiet comfort"]["explanation"]] * 4
         )
         finished()
-        assert page.locator("#results article").count() == 3
+        assert page.locator("#results article").count() == 4
         assert (
             page.locator(".explanation-text").all_text_contents()
-            == [OpenAIHandler.explanations["quiet comfort"]["explanation"]] * 3
+            == [OpenAIHandler.explanations["quiet comfort"]["explanation"]] * 4
         )
-        assert page.locator("#results img").count() == 0
+        assert page.locator("#results img[src=x]").count() == 0
         assert page.evaluate("window.injected === undefined")
+
+        # Details expand only the selected card without moving adjacent columns.
+        first_details = page.locator("#results .details-action").first
+        neighbor_x = page.locator("#results article").nth(1).bounding_box()["x"]
+        first_details.click()
+        assert page.locator("#results article.is-expanded").count() == 1
+        assert (
+            page.locator("#results article")
+            .first.locator(".movie-details")
+            .is_visible()
+        )
+        assert page.locator("#results article").nth(1).bounding_box()["x"] == neighbor_x
+        page.locator("#results .details-action").nth(1).click()
+        assert (
+            not page.locator("#results article")
+            .first.locator(".movie-details")
+            .is_visible()
+        )
+        assert (
+            "Two neighbors exchange letters"
+            in page.locator("#results article.is-expanded .synopsis").inner_text()
+        )
+        assert page.locator("#results article").count() == 4
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path="/tmp/cinemood-details-desktop.png", full_page=True)
+        page.keyboard.press("Escape")
+        assert page.locator("#results article.is-expanded").count() == 0
+        assert (
+            page.locator("#results .details-action")
+            .nth(1)
+            .evaluate("(el) => el === document.activeElement")
+        )
+
+        # A pending replacement keeps usable cards and their interpreted context.
+        held = []
+        page.route("**/api/recommendations/stream", lambda route: held.append(route))
+        original_cards = page.locator("#results h2").all_text_contents()
+        search("replacement pending")
+        page.wait_for_function('document.querySelector("#cancel").hidden === false')
+        assert page.locator("#results h2").all_text_contents() == original_cards
+        page.locator(".request-context summary").click()
+        assert "quiet comfort" in page.locator("#interpretation").inner_text()
+        page.locator(".request-context summary").click()
+        page.get_by_role("button", name="Cancel search").click()
+        finished()
+        for route in held:
+            route.abort()
+        page.unroute("**/api/recommendations/stream")
+        assert page.locator("#results h2").all_text_contents() == original_cards
         page.get_by_role("button", name="Save to collection", exact=True).first.click()
         page.get_by_role("button", name="Saved to collection", exact=True).wait_for()
         page.get_by_role("link", name="My collection", exact=True).click()
@@ -237,9 +322,20 @@ try:
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.screenshot(path="/tmp/cinemood-stream-mobile.png", full_page=True)
+
+        # Inline details keep the same interaction on mobile, without an overlay.
+        mobile_action = page.locator("#results .details-action").first
+        mobile_action.click()
+        assert page.locator("#results article.is-expanded .movie-details").is_visible()
+        assert page.locator("dialog").count() == 0
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        page.screenshot(path="/tmp/cinemood-details-mobile.png", full_page=True)
+        page.keyboard.press("Escape")
+        assert mobile_action.evaluate("(el) => el === document.activeElement")
+        assert page.locator("#results article.is-expanded").count() == 0
         search("invalid evidence")
         finished()
-        assert page.locator(".explanation-text").all_text_contents() == ["", "", ""]
+        assert page.locator(".explanation-text").all_text_contents() == ["", "", "", ""]
         assert all(
             "unavailable" in text
             for text in page.locator(".explanation").all_text_contents()
@@ -250,8 +346,8 @@ try:
         ).first.wait_for()
         page.get_by_role("button", name="Cancel search").click()
         finished()
-        assert page.locator("#results article").count() == 3
-        assert page.locator(".explanation-text").all_text_contents() == ["", "", ""]
+        assert page.locator("#results article").count() == 4
+        assert page.locator(".explanation-text").all_text_contents() == ["", "", "", ""]
         assert "cancelled" in page.locator("#status").inner_text()
         search("under 1")
         finished()
@@ -288,13 +384,13 @@ try:
         page.route("**/api/recommendations/stream", interrupt)
         search("quiet comfort")
         finished()
-        assert page.locator("#results article").count() == 3
-        assert page.locator(".explanation-text").all_text_contents() == ["", "", ""]
+        assert page.locator("#results article").count() == 4
+        assert page.locator(".explanation-text").all_text_contents() == ["", "", "", ""]
         assert "interrupted" in page.locator("#status").inner_text()
         page.unroute("**/api/recommendations/stream")
         search("provider failure")
         finished()
-        assert page.locator("#results article").count() == 0
+        assert page.locator("#results article").count() == 4
         assert "provider" in page.locator("#status").inner_text().lower()
         assert not errors, errors
         Path("/tmp/cinemood-stream-browser.json").write_text(

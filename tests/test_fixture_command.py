@@ -29,7 +29,7 @@ def test_bounded_load_and_repeat_preserve_catalog_identities(client):
                 "movies"
             ]
         )
-        == 3
+        == 4
     )
 
 
@@ -60,7 +60,7 @@ def test_failed_load_leaves_empty_catalog_and_can_retry(client, monkeypatch):
                 "movies"
             ]
         )
-        == 3
+        == 4
     )
 
 
@@ -81,7 +81,7 @@ def test_repeat_migration_preserves_discoverable_catalog(loaded_client):
                 "/api/recommendations", json={"request": "comfort"}
             ).json()["movies"]
         )
-        == 3
+        == 4
     )
 
 

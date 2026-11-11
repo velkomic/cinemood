@@ -40,8 +40,8 @@ Python worker thread.
 
 Bounds: 16 KiB body, 2,000 request characters, four admitted requests per app
 process (no queue), 75 seconds total, 30 seconds per explanation, zero retries,
-400 output tokens per movie, 3 movies, 6,000 streamed JSON characters per movie,
-1,200 explanation characters and 1–3 numbered overview references. The server
+400 output tokens per movie, 5 movies, 6,000 streamed JSON characters per movie,
+420 explanation characters and 1–3 numbered overview references. The server
 splits the overview into literal excerpts, sends numbered excerpts with the movie,
 and constrains the provider JSON Schema to that movie ID and those reference IDs.
 The application validates the final schema, finish reason, movie ID and reference
@@ -65,3 +65,12 @@ The explanation JSON Schema follows the [official structured-output guide](https
 Schema-constrained references establish source identity and format; they do not
 prove that every sentence is entailed by its selected excerpt. Human grounding
 review remains necessary.
+
+
+The 2026-11-10 owner refinement raises retrieval to up to five films and requests
+compact explanations (20–35 words, at most 420 validated characters). Calls remain
+sequential and independently validated; the unchanged total timeout still bounds
+the request. Five films can therefore require five explanation calls, rather than
+three. Provider latency can still cause explanation fallback while catalog facts
+remain visible. Deterministic tests establish behavior, not live relevance or a
+new latency/cost measurement.

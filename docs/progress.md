@@ -1,6 +1,102 @@
 # Progress
 
+## Frontend baseline commit preparation — 2026-11-11
+
+- The owner requested committing the existing visual rework before concurrent
+  architecture follow-ups #8 and #9. The baseline includes the lounge frontend,
+  local fonts/licenses, retained-snapshot poster and spotlight endpoints,
+  five-film retrieval, compact explanations, supporting tests and design records.
+- Fresh verification: **144 affected integration tests passed in 273.54s**
+  (`test_posters`, `test_discover`, `test_streaming`, `test_constraints`,
+  `test_fixture_command`, `test_relaxation`) against a disposable PostgreSQL 16 /
+  pgvector 0.8.2 Docker database. Both deterministic browser suites,
+  `browser_ux_smoke.py` and `browser_stream_smoke.py`, passed. Ruff lint/format,
+  strict mypy, all three frontend JavaScript syntax checks and whitespace checks
+  passed. No full-suite, hosted CI, live-provider or deployment pass is claimed.
+- Local loopback/browser/database checks required sandbox escalation. The stream
+  browser command needed `PYTHONPATH=.` to import the application; its corrected
+  invocation passed. The retained catalog/application were not modified.
+
+## Architecture follow-up tickets — 2026-11-11
+
+- The owner requested publication of the two architecture-review candidates for
+  later work. Verified `velkomic/cinemood` through the connected GitHub tools,
+  checked existing issues for duplicates, and refreshed Cupcake context (no
+  additional CineMood context found). The `gh` CLI remains unavailable.
+- Created [#8: Deepen the shared movie-card lifecycle](https://github.com/velkomic/cinemood/issues/8)
+  and [#9: Deepen browser recommendation-session state](https://github.com/velkomic/cinemood/issues/9),
+  both open and labelled `needs-triage`. Each records current working-tree
+  evidence, proposed direction, acceptance criteria and verification expectations.
+  Concrete interfaces and seam placement still need review before implementation.
+- Recommend #8 before #9; this is not a hard dependency. These are backlog
+  maintenance follow-ups, not blockers for T6 (#7), which remains the next MVP
+  slice. No native tracker relationship mutation was needed; #9 references #8
+  as related work in its body.
+- The review includes uncommitted/untracked frontend changes, explicitly noted
+  in both issues. No application implementation, test execution, push, deployment
+  or paid-resource change occurred while filing these tickets.
+
+## Spotlight, poster color, Save and navigation — 2026-11-11
+
+- Fetched Cupcake context before editing; no additional CineMood context found.
+  Implemented up to five spotlight films, five-ID shuffle exclusions, and five /
+  three / two / one responsive spotlight columns. Small catalogs still return all
+  available films and disable unhelpful shuffles.
+- Increased the poster-derived background blend and saturation while preserving
+  intact foreground artwork and missing-image fallback. Added the documented CSS
+  variable `--poster-background-strength: 85%` for percentage-based tuning.
+- Reproduced the Save layout jump with a failing pending-width browser assertion.
+  Reserved stable control width, removed translation/scale during state changes,
+  preserved icon/label nodes across unrelated refreshes and kept color transitions
+  active for disabled/saved states. The regression now passes.
+- Added sticky navigation with a short directional-scroll threshold, upward-scroll
+  reveal, top-edge mouse reveal, keyboard-focus reveal and reduced-motion support.
+  Verified these paths in the UI browser suite with animations enabled as well as
+  the existing reduced-motion flow; no JavaScript errors or horizontal overflow.
+- Four poster/spotlight API integration tests passed against a disposable Docker
+  PostgreSQL 16 / pgvector 0.8.2 database before interruption. The complete UI state
+  suite passed again after resuming, with desktop/mobile screenshots inspected.
+  Ruff lint/format, JavaScript syntax and git whitespace checks passed.
+- The retained app was rebuilt and reached healthy status before interruption.
+  After resuming, Docker's WSL integration and port 58000 were unavailable. The
+  latest CSS-variable edit therefore still needs an app rebuild when Docker is
+  restored. The database-backed browser rerun could not connect to its disposable
+  database; no new passing result is claimed. Firefox is not installed in the
+  browser-test environment. No live model calls or paid infrastructure changes.
+
+## Find movies and UX re-verification — 2026-11-10
+
+- The requested spotlight shuffle/home return, local focus, Enter/Shift+Enter,
+  inline details/TMDB links, five-result retrieval and compact adaptive layouts
+  were already present in the working tree at the start of this follow-up.
+  Preserved those changes and inspected the supplied focus reference plus fresh
+  desktop/mobile captures. Cupcake returned no additional project context.
+- Extended `tests/browser_ux_smoke.py` with explicit Find movies mouse submission,
+  repeated-search and button recovery assertions alongside the existing keyboard
+  flow. The full UI suite passed at its existing 320–1366px sizes; Ruff lint,
+  formatting and git whitespace checks passed.
+- Verified the retained app at `http://localhost:58000` with two bounded live
+  searches for “a hopeful story about friendship under two hours”: one streamed
+  API request and one actual Chromium button click. Both returned five films and
+  completed explanations; the API completed in 8.9 seconds. Chromium reported no
+  JavaScript errors. Inspected `/tmp/cinemood-live-search.png` at 1366×768.
+  These are functionality checks, not a new recommendation-quality evaluation.
+- The reported Find movies failure did not reproduce in the current app. Asked
+  for the failing URL, request and visible behavior; no speculative production
+  fix was applied. Initial loopback/Docker failures were session sandbox access
+  restrictions, resolved for verification, not an application outage.
+- No full Python-suite rerun, deployment, ingestion or paid infrastructure change
+  occurred in this follow-up. Earlier regression counts remain historical.
+
 ## Active milestone
+
+Frontend redesign discovery is consolidated in
+[`plans/frontend-redesign.md`](plans/frontend-redesign.md), with durable product
+context in root `PRODUCT.md`. The owner accepted the detail-panel recommendation
+and motion behavior. The brief distinguishes confirmed requirements from proposed
+layout and unresolved batch/refinement behavior. No frontend implementation,
+new tests, tracker publication, or deployment occurred during this interview;
+the verified T1–T5 implementation state below is unchanged.
 
 T5 ([#6: Keep an isolated personal collection](https://github.com/velkomic/cinemood/issues/6)) is implemented and locally verified: **187 passing integration checks**, deterministic desktop/mobile browser flow, actual PostgreSQL/application restart persistence, static checks, and independent Standards/Spec reviews with zero remaining findings. The retained 1,000-movie app is updated on port 58000. The owner accepted T5 and requested closure; #6 is now **closed on GitHub** with all four acceptance criteria checked. T6 (#7) is the next slice; paid provisioning remains separately gated.
 
@@ -306,3 +402,179 @@ The repository documentation and published ticket are the durable context; the p
 - The owner accepted the verified implementation and explicitly requested closure. Verified the repository remote as `velkomic/cinemood`, refetched current #6 and its empty comments through connected GitHub tools, posted the completion evidence, checked all four acceptance criteria, and closed #6 with reason `completed`. GitHub returned **closed**, reason **completed**, and **one comment**. Completion comment: https://github.com/velkomic/cinemood/issues/6#issuecomment-6773245260.
 - Evidence remains **187 passing integration checks**, deterministic desktop/mobile browser save/list/remove and identity-race checks, actual application/database restart persistence, static checks, and zero remaining Standards/Spec findings. Implementation commits `af836c7` and `837f212` remain local; no push or hosted CI pass is claimed. No new application changes, tests, provider calls, ingestion or AWS operations were needed for closure.
 - Updated project/progress status to accepted and closed. T6 (#7) is the next slice; read its current full issue and verify blockers before implementation. Its concrete paid-resource plan still requires explicit approval. Pre-existing untracked planning/domain files remain untouched.
+
+## Frontend redesign directions — 2026-11-10
+
+- Reused the completed interview in `PRODUCT.md` and `plans/frontend-redesign.md`.
+  Read current project/domain/architecture/specification context and fetched
+  Cupcake context; no additional CineMood order was returned.
+- Presented Screening lounge, Cinematheque and Film grid as concrete desktop
+  HTML sketches on a local visual decision board, with a conventional alternative.
+  Rendered and inspected all four at 1440×900 in Chromium. They use labeled
+  fictional fixtures and concept covers; they are not production functionality.
+- `plans/frontend-visual-directions.md` records the alternatives and pending
+  owner choice. `plans/frontend-redesign-spec-work.md` identifies the batch,
+  refinement, poster and detail contracts and proposed sequencing. These are
+  proposals, not agreed new search specifications or published tracker tickets.
+- Production source remains unchanged. No direction is selected, no backend
+  extension is implemented, and no regression test pass is claimed for this
+  design stage. No provider call, ingestion, paid provisioning or tracker
+  mutation occurred. Implementation follows the owner's visual choice.
+
+
+## Screening lounge refined implementation — 2026-11-10
+
+- The owner selected Screening lounge refined after comparing the reopened
+  localhost sketches: lounge logo/recommendation columns, compact request band,
+  underlined text Details actions. The completed interview was reused. Refetched
+  Cupcake context before implementation; no additional CineMood order returned.
+- Reworked Discover and My collection with local variable Manrope/DM Sans fonts,
+  blue-black/navy/periwinkle tokens, open movie columns, compact restriction
+  summary, on-demand request context and synopsis, shared responsive details,
+  and title-led missing/broken-poster fallback. Mobile cards stack; native modal
+  details fill the viewport. Desktop details share the comparison width.
+- Added two read-only display endpoints: bounded catalog preview (12 records,
+  stable ID order, UI shows eight) and fixed-host TMDB poster redirects derived
+  from existing validated catalog snapshots. Verified eight real preview posters
+  load. No migration, backfill, ingestion, re-embedding or live model call occurred.
+  Initial browsing is labeled as catalog content, not recommendations or ranking.
+- Existing request/stream/relaxation and collection API payloads remain unchanged.
+  Current results and interpreted context survive pending replacements and early
+  failure/cancellation. Safe catalog/model text rendering, explanation fallback,
+  anonymous ownership/Web Locks and explicit restriction changes are preserved.
+- Deterministic browser smoke passes streamed/fragmented UTF-8, safe HTML-like
+  text, explanation fallback, cancellation and malformed EOF, runtime/language
+  selection, save/list/remove, retry, reload and two-tab identity isolation.
+  Added desktop details update/Escape/focus return, mobile modal/close/focus,
+  pending-replacement retention, ambient focus pause, reduced motion and keyboard
+  preview details across resizing. Zero browser JavaScript errors or mobile
+  horizontal overflow. Separate live-catalog checks cover normal animation,
+  pause, reduced motion, keyboard return and long-request layout without model calls.
+- Inspected actual renders at 1440 desktop, 1920 wide, 1024 tablet and 390 mobile,
+  including initial catalog, results, detail views and empty/saved collections.
+  `.impeccable/review/browser-evidence.json` records that screenshot streams use
+  deterministic real catalog facts; these captures do not establish model relevance.
+  The temporary saved item used for live UI verification was removed.
+- Independent impeccable finish review: **ship**, no material fixes. The
+  accessibility-only Credits landmark correction was independently rechecked and
+  leaves ship unchanged. Detector: no findings and no new ignores. The documenter
+  created token-bearing `DESIGN.md` and `.impeccable/design.json` from the actual
+  implementation. Fonts include open licenses and source provenance; poster
+  images remain remote, attributed TMDB assets rather than vendored rasters.
+- First full integration run: **188 passed, one failed** (the old Credits label
+  assertion); restored the accessible landmark label while keeping visible TMDB
+  logo/attribution. Focused regression then passed. Final full-suite rerun is in
+  progress; its result follows below. Ruff, strict mypy, JavaScript syntax and
+  whitespace checks pass.
+- Rebuilt only the retained local app at `http://localhost:58000/`; health is OK,
+  and read-only SQL confirms all **1,000 movies**. Persistent catalog/snapshot
+  volumes and the separate port-8000 application are preserved. Additional batches
+  and contextual follow-ups remain unimplemented specification work in
+  `plans/frontend-redesign-spec-work.md`. No remote push, tracker mutation, paid
+  provisioning, hosted CI claim or new recommendation-quality claim is made.
+
+
+## Owner-requested UI/UX refinements — 2026-11-10
+
+- Reused the existing Screening lounge design and read the supplied focus
+  screenshot. Fetched Cupcake context before implementation; no additional
+  CineMood order was returned. The owner's six-item request explicitly replaces
+  the old three-recommendation limit and sidebar/modal details behavior.
+- Spotlight now samples four catalog films with Shuffle films, automatic refresh
+  on homepage entry/history restoration, previous-ID preference, no-store caching,
+  retained content on loading/error and useful small/empty catalog states. Sampling
+  remains catalog browsing, not semantic recommendation or popularity ranking.
+- Removed container focus outlines; the textarea has a local accent underline.
+  Enter submits, Shift+Enter inserts a newline and IME composition is guarded.
+  Selected film details now expand inline with synopsis, full metadata, valid
+  catalog-derived TMDB links, a slight poster scale/highlight, accessible toggle
+  state, single-card selection, close/Escape and focus return. No sidebar or modal
+  remains on either page or screen size.
+- Retrieval returns up to five distinct, stably ranked catalog films. Explanation
+  prompts target 20–35 words with a 420-character validation ceiling; strict evidence
+  references, safe text rendering, independent per-film fallback, concurrency and
+  total stream timeout remain. Five records permit up to five sequential explanation
+  calls; these changes do not establish a new live relevance, latency or cost score.
+- Reduced desktop spacing/header/poster dimensions and added adaptive 0–5-card
+  layouts. Intact foreground posters use a subdued same-poster background; missing
+  images retain title-led fallback. Save uses a bookmark/check icon, clear hover/
+  press/busy/Saved states, synchronized copies and visible retry feedback. Existing
+  anonymous ownership, Web Locks, restrictions and explicit relaxation remain.
+- **60 focused API/integration checks passed** against real PostgreSQL, covering
+  spotlight sampling/exclusions, validation/fallback, stable five-film retrieval,
+  five explanation completions and existing streaming failure/cancellation behavior.
+  The environment's Docker integration is unavailable; checks use a disposable
+  local UTF-8 PostgreSQL **16.15** cluster with pgvector **0.6.0** extracted under
+  `/tmp`, not the retained application's pgvector 0.8.2 container. The first native
+  test setup used SQL-ASCII and was replaced with UTF-8 before valid verification.
+- Both browser suites pass. The real-database flow retains UTF-8 fragmentation,
+  safe HTML-like text, restriction changes, cancellation/EOF recovery, collection
+  retries/persistence/isolation and two-tab identity checks. The UI state suite
+  covers navigation/history/Shuffle refresh, failures preserving spotlight content,
+  Enter/Shift+Enter, local focus, inline selection/focus/TMDB URLs, pending/error/
+  Saved feedback, 0–5 results and 320/390/768/1024/1280/1366 widths. No JavaScript
+  errors or horizontal overflow. All five actions fit the tested 1366×768 and
+  1280×720 desktop viewports at 100% zoom with compact fixture explanations.
+- Inspected the batched desktop/mobile captures in
+  `.impeccable/review/ui-refinements/`. These screenshots use labeled synthetic
+  HTTP fixtures and geometric test posters, not a new live catalog/model evaluation.
+  `DESIGN.md`, its sidecar, PRODUCT/project/specification/streaming notes and the
+  surface contract now describe the approved refinements. Earlier evaluation and
+  acceptance artifacts remain historical evidence, unchanged.
+- The broad regression sweep exposed remaining fixture assertions expecting three
+  results; updated only result-count/order expectations, preserving filter,
+  ownership, provider-call and migration assertions. Final complete-suite result
+  follows below. Ruff, strict mypy, JavaScript syntax and whitespace checks pass.
+- No retained-catalog ingestion, backfill, schema migration, re-embedding, live
+  provider call, tracker mutation, remote push or AWS operation occurred. The
+  Docker-backed demo could not be rebuilt in this session because Docker is
+  unavailable; its persistent data was not replaced with verification fixtures.
+
+
+- Final full regression result: **192 passed in 364.24s (6m 04s)** using
+  `TEST_DATABASE_URL=postgresql://cinemood@127.0.0.1:55433/postgres .venv/bin/python -m pytest -q --tb=short`.
+  All earlier behavior plus the new spotlight/five-film checks passed against the
+  isolated UTF-8 PostgreSQL 16.15 / pgvector 0.6.0 runtime. Both browser suites,
+  Ruff lint/format (62 Python files), strict mypy (15 application files), all three
+  JavaScript syntax checks and whitespace checks passed. Final test log:
+  `/tmp/cinemood-ux-final-complete.log` (session artifact). No hosted CI or live-model
+  quality result is claimed. The temporary PostgreSQL runtime is stopped after
+  verification; Docker-backed catalog/snapshot storage remains untouched.
+
+- Follow-up runtime verification: Docker access is available again. Rebuilt and
+  restarted only the retained `cinemood-t2-live` app with the current refinements;
+  catalog/snapshot volumes were preserved. Port 58000 health passes and the live
+  spotlight endpoint returns four films. Reran the UI browser suite successfully,
+  inspected desktop/mobile captures, and rechecked Ruff, mypy, JavaScript syntax
+  and whitespace. The prior 192-test full-suite log remains the full regression
+  evidence; no new live model quality assessment was performed.
+
+
+## UX correction follow-up — 2026-11-10
+
+- Inspected the existing implementation, focus reference screenshot, and live
+  retained catalog. Cupcake search returned no additional CineMood context.
+- Reproduced multiline request clipping: a three-line request occupied 37px
+  while requiring 87px. Added a failing browser assertion, then automatic bounded
+  textarea sizing; Enter still submits, Shift+Enter adds a line and focus remains
+  local. Long original requests now live inside the Request details disclosure.
+- Inline synopsis now appears immediately below title/facts, replacing explanation
+  prose until closed. Long synopses scroll with mouse or keyboard. Removed reserved
+  title whitespace. Phone spotlight entries use compact side-by-side poster/text
+  with full-width details instead of narrow, vertically stretched half-columns.
+- Added the existing polished Save control to spotlight films, adapted collection
+  grids to their count and cleared detached detail selection during collection
+  refresh. Existing five-film retrieval and compact explanation prompts are retained.
+- Both browser suites pass: HTTP-fixture UI states at 320–1366px, multiline sizing,
+  long synopsis keyboard scrolling, full-width mobile details, save states, and
+  collection history restoration; real PostgreSQL/pgvector browser flow covering
+  streaming, cancellation, constraints and anonymous collection persistence. The
+  latter used a disposable pgvector 0.8.2/PostgreSQL 16 Docker database on 55434.
+- Ruff lint/format, strict mypy, all JavaScript syntax checks and whitespace checks
+  pass. The prior 192-test result remains historical; the full Python suite was not
+  rerun for these frontend-only corrections.
+- Rebuilt only the retained local app on port 58000; catalog/snapshot volumes were
+  preserved. Verified live catalog shuffle, multiline sizing and mobile details;
+  visually inspected desktop/mobile screenshots in /tmp/cinemood-*-after.png and
+  fixture captures under .impeccable/review/ui-refinements/. No live model calls,
+  ingestion, remote publication or paid infrastructure changes were made.

@@ -385,7 +385,7 @@ def test_pending_selection_capacity_is_atomic_and_preserves_displayed_options(
         json={"request": "quiet comfort", "selection": first_token},
     )
     assert selected.status_code == 200
-    assert len(selected.json()["movies"]) == 3
+    assert len(selected.json()["movies"]) == 4
 
 
 def test_selection_from_a_previous_app_instance_requires_a_new_search(

@@ -5,6 +5,9 @@ const results = document.querySelector('#results');
 const button = form.querySelector('button');
 const interpretation = document.querySelector('#interpretation');
 const suggestions = document.querySelector('#suggestions');
+const preview = document.querySelector('#catalog-preview');
+const resultHeading = document.querySelector('#results-heading');
+const resultCount = document.querySelector('#result-count');
 
 function paragraph(text) {
   const element = document.createElement('p');
@@ -26,14 +29,16 @@ function restrictionSummary(parsed) {
 function showInterpretation(data) {
   interpretation.replaceChildren();
   interpretation.hidden = false;
-  interpretation.append(paragraph(`Original request: ${data.original_request}`));
   const parsed = data.interpretation;
   if (!parsed) return;
-  if (data.applied_change) {
-    interpretation.append(paragraph(`Original restrictions: ${restrictionSummary(data.original_interpretation)}`));
-  }
   interpretation.append(paragraph(`Current restrictions: ${restrictionSummary(parsed)}`));
-  interpretation.append(paragraph(`Mood / themes: ${parsed.semantic_query}`));
+  const context = document.createElement('details');
+  context.className = 'request-context';
+  const summary = document.createElement('summary');
+  summary.textContent = 'Request details';
+  context.append(summary, paragraph(`Original request: ${data.original_request}`), paragraph(`Mood / themes: ${parsed.semantic_query}`));
+  if (data.applied_change) context.append(paragraph(`Original restrictions: ${restrictionSummary(data.original_interpretation)}`));
+  interpretation.append(context);
   if (data.applied_change) interpretation.append(paragraph(`Selected change: ${data.applied_change}. Other restrictions preserved.`));
   if (parsed.unsupported_requirements.length) {
     const warning = document.createElement('div');
@@ -47,7 +52,23 @@ function showInterpretation(data) {
   for (const question of parsed.clarification) interpretation.append(paragraph(`Please clarify: ${question}`));
 }
 
-requestInput.addEventListener('input', () => suggestions.replaceChildren());
+function resizeRequest() {
+  requestInput.style.height = 'auto';
+  requestInput.style.height = `${Math.min(requestInput.scrollHeight + 2, 160)}px`;
+}
+requestInput.addEventListener('input', () => {
+  suggestions.replaceChildren();
+  resizeRequest();
+});
+window.addEventListener('resize', resizeRequest);
+window.addEventListener('pageshow', resizeRequest);
+document.fonts.ready.then(resizeRequest);
+requestInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && !event.shiftKey && !event.isComposing && event.keyCode !== 229) {
+    event.preventDefault();
+    if (!button.disabled) form.requestSubmit();
+  }
+});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -57,6 +78,8 @@ form.addEventListener('submit', async (event) => {
     requestInput.focus();
     return;
   }
+  requestInput.value = request;
+  resizeRequest();
   await search(request);
 });
 
@@ -66,6 +89,15 @@ cancelButton.addEventListener('click', () => activeController?.abort());
 window.addEventListener('pagehide', () => activeController?.abort());
 
 function showResult(data, explanations) {
+  closeMovieDetails(false);
+  results.replaceChildren();
+  interpretation.replaceChildren();
+  interpretation.hidden = true;
+  preview.hidden = true;
+  resultHeading.hidden = data.movies.length === 0;
+  results.dataset.count = String(data.movies.length);
+  resultCount.textContent = `${data.movies.length} ${data.movies.length === 1 ? 'film' : 'films'}`;
+  results.classList.remove('is-replaced');
   if (data.original_request) showInterpretation(data);
   for (const suggestion of data.suggestions || []) {
     const option = document.createElement('button');
@@ -74,20 +106,19 @@ function showResult(data, explanations) {
     option.addEventListener('click', () => search(data.original_request, suggestion.selection));
     suggestions.append(option);
   }
-  for (const [index, movie] of data.movies.entries()) {
+  for (const movie of data.movies) {
     const card = catalogCard(movie);
-    const number = paragraph(`0${index + 1} / CATALOG MATCH`);
-    number.className = 'number';
     const explanation = paragraph('Generating explanation…');
     explanation.className = 'explanation';
     const text = paragraph('');
     text.className = 'explanation-text';
-    card.prepend(number);
-    card.append(explanation, text);
+    card.insertBefore(explanation, card.querySelector('.movie-actions'));
+    card.insertBefore(text, card.querySelector('.movie-actions'));
     addCollectionAction(card, movie);
     results.append(card);
     explanations.set(movie.id, { label: explanation, text, complete: false });
   }
+  results.classList.add('is-replaced');
   status.textContent = data.message;
 }
 
@@ -135,13 +166,13 @@ async function search(request, selection = null) {
   button.disabled = true;
   cancelButton.hidden = false;
   suggestions.replaceChildren();
-  interpretation.replaceChildren();
-  interpretation.hidden = true;
-  results.replaceChildren();
+  document.body.classList.add('motion-paused');
   results.setAttribute('aria-busy', 'true');
+  status.classList.remove('sr-only');
   status.textContent = 'Starting search…';
   const explanations = new Map();
   let resultMessage = '';
+  let hasMatches = false;
   const discardTentative = () => {
     for (const item of explanations.values()) {
       if (!item.complete) {
@@ -166,6 +197,7 @@ async function search(request, selection = null) {
         status.textContent = labels[data.stage] || 'Searching…';
       } else if (event === 'result') {
         resultMessage = data.message;
+        hasMatches = data.movies.length > 0;
         showResult(data, explanations);
       } else if (event === 'explanation_delta' || event === 'explanation_complete' || event === 'explanation_error') {
         const item = explanations.get(data.movie_id);
@@ -176,6 +208,7 @@ async function search(request, selection = null) {
         } else if (event === 'explanation_complete') {
           item.complete = true;
           item.label.textContent = 'Why this may fit';
+          item.label.classList.add('is-complete');
           item.text.textContent = data.text;
         } else {
           item.text.textContent = '';
@@ -184,6 +217,7 @@ async function search(request, selection = null) {
       } else if (event === 'complete') {
         discardTentative();
         status.textContent = resultMessage;
+        status.classList.toggle('sr-only', hasMatches);
       } else if (event === 'error') {
         throw new Error(data.message);
       } else {
@@ -203,3 +237,63 @@ async function search(request, selection = null) {
     results.setAttribute('aria-busy', 'false');
   }
 }
+
+
+// Each homepage visit and explicit shuffle asks for a fresh, bounded selection.
+const shuffleButton = document.querySelector('#shuffle-preview');
+shuffleButton.prepend(lineIcon('shuffle'));
+let previewController = null;
+let previewIds = [];
+try {
+  const saved = JSON.parse(sessionStorage.getItem('cinemood:spotlight') || '[]');
+  if (Array.isArray(saved)) previewIds = saved.filter(id => Number.isSafeInteger(id) && id > 0).slice(0, 5);
+} catch { /* Browsing remains available if session storage is disabled. */ }
+
+async function loadPreview() {
+  previewController?.abort();
+  const controller = new AbortController();
+  previewController = controller;
+  const previewStatus = document.querySelector('#preview-status');
+  const track = document.querySelector('#preview-track');
+  shuffleButton.disabled = true;
+  shuffleButton.classList.add('is-loading');
+  track.setAttribute('aria-busy', 'true');
+  previewStatus.textContent = track.children.length ? 'Finding a fresh selection…' : 'Loading the catalog…';
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const query = new URLSearchParams();
+    for (const id of previewIds) query.append('exclude', id);
+    const response = await fetch(`/api/catalog-preview?${query}`, { cache: 'no-store', signal: controller.signal });
+    if (!response.ok) throw new Error('Preview unavailable');
+    const data = await response.json();
+    if (controller !== previewController) return;
+    if (selectedCard?.closest('#preview-track')) closeMovieDetails(false);
+    const cards = data.movies.map(movie => {
+      const card = catalogCard(movie);
+      card.classList.add('preview-film');
+      addCollectionAction(card, movie);
+      return card;
+    });
+    track.replaceChildren(...cards);
+    previewIds = data.movies.map(movie => movie.id);
+    try { sessionStorage.setItem('cinemood:spotlight', JSON.stringify(previewIds)); } catch { /* Optional storage. */ }
+    shuffleButton.disabled = !data.has_more;
+    previewStatus.textContent = !cards.length ? 'The catalog is empty. Movies will appear here after loading.'
+      : data.has_more ? '' : 'You’re seeing all the films currently in this catalog.';
+  } catch (error) {
+    if (controller !== previewController) return;
+    shuffleButton.disabled = false;
+    previewStatus.textContent = controller.signal.aborted
+      ? 'The preview took too long. Try Shuffle films again.'
+      : 'Preview unavailable. Try Shuffle films again, or search above.';
+  } finally {
+    clearTimeout(timeout);
+    if (controller === previewController) {
+      shuffleButton.classList.remove('is-loading');
+      track.setAttribute('aria-busy', 'false');
+    }
+  }
+}
+shuffleButton.addEventListener('click', loadPreview);
+window.addEventListener('pageshow', (event) => { if (event.persisted) loadPreview(); });
+loadPreview();
