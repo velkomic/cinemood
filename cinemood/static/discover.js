@@ -10,8 +10,7 @@ const resultHeading = document.querySelector('#results-heading');
 const resultCount = document.querySelector('#result-count');
 const recommendationCards = createCollectionCardGroup(results, 'recommendations', requestInput);
 const previewStatus = document.querySelector('#preview-status');
-previewStatus.tabIndex = -1;
-const spotlightCards = createCollectionCardGroup(document.querySelector('#preview-track'), 'spotlight', previewStatus);
+const spotlightCards = createCollectionCardGroup(document.querySelector('#preview-track'), 'spotlight', requestInput);
 
 function paragraph(text) {
   const element = document.createElement('p');
@@ -95,6 +94,7 @@ window.addEventListener('pagehide', () => activeController?.abort());
 function showResult(data, explanations) {
   interpretation.replaceChildren();
   interpretation.hidden = true;
+  spotlightCards.replace([]);
   preview.hidden = true;
   resultHeading.hidden = data.movies.length === 0;
   results.dataset.count = String(data.movies.length);

@@ -33,6 +33,9 @@ try:
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.route("**/api/**", lambda route: route.fulfill(status=404))
+        held_posters = []
+        poster_pattern = "**/api/movies/*/poster"
+        page.route(poster_pattern, lambda route: held_posters.append(route))
         page.goto(base + "/style.css")
         page.set_content("""<button id="fallback">Fallback</button>
             <div id="one"></div><div id="two"></div>""")
@@ -94,6 +97,9 @@ try:
         page.evaluate("two.remove(1); update(1, {phase: 'complete', text: 'REMOVED'})")
         expect(page.locator("#fallback")).to_be_focused()
         expect(page.locator("#two .movie")).to_have_count(0)
+        for route in held_posters:
+            route.abort()
+        page.unroute(poster_pattern)
         assert not errors, errors
         held_loads = []
         held_mutations = []
@@ -252,7 +258,29 @@ try:
         page.wait_for_timeout(100)
         page.locator("#preview-track .poster-button").focus()
         held_previews.pop().fulfill(json={"movies": [movie], "has_more": False})
-        expect(page.locator("#preview-status")).to_be_focused()
+        expect(page.locator("#request")).to_be_focused()
+        held_searches = []
+        page.route(
+            "**/api/recommendations/stream", lambda route: held_searches.append(route)
+        )
+        page.locator("#request").fill("A hopeful film")
+        page.locator("#request").press("Enter")
+        page.locator("#preview-track .details-action").click()
+        page.wait_for_timeout(100)
+        result = {"movies": [movie], "message": "Matches", "suggestions": []}
+        stream = "".join(
+            f"event: {event}\ndata: "
+            + json.dumps({**data, "sequence": index, "request_id": "cards"})
+            + "\n\n"
+            for index, (event, data) in enumerate(
+                [("result", result), ("complete", {})], 1
+            )
+        )
+        held_searches.pop().fulfill(content_type="text/event-stream", body=stream)
+        expect(page.locator("#results .movie")).to_have_count(1)
+        expect(page.locator("#request")).to_be_focused()
+        expect(page.locator("#preview-track .is-expanded")).to_have_count(0)
+        assert not errors, errors
         browser.close()
     print("Card lifecycle browser checks passed")
 finally:

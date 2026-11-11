@@ -58,8 +58,10 @@ Issue #8 now uses shared card groups in spotlight, recommendations and collectio
 Card markup, explanation/action presentation, Details selection and focus cleanup
 are private to the card module. Collection retains requests, anonymous bootstrap,
 membership and load/mutation ordering. The accepted contract remains in
-`plans/movie-card-lifecycle.md`; executed checks and remaining verification are
-recorded in `progress.md`. #9's session design and combined integration remain
+`plans/movie-card-lifecycle.md`; verification includes 192 passing integration
+checks, all three browser suites, static checks and zero remaining independent
+review findings, recorded in `progress.md`. Owner acceptance is pending.
+#9's session design and combined integration remain
 separate work.
 
 ## Planning workflow

@@ -27,10 +27,31 @@
 - `tests/browser_cards_smoke.py` and both retained browser suites pass, including
   existing desktop/mobile appearance, fallback, motion, accessibility, stream
   validation/cancellation and anonymous-identity flow. Collection REST integration:
-  **21 passed in 23.91s** on disposable PostgreSQL 16 / pgvector 0.8.2 (55434).
-  Ruff lint/format, strict mypy and all three JavaScript syntax checks pass.
-- Full-suite and independent Standards/Spec review results will be recorded
-  after execution. No live provider calls, retained-app rebuild, remote push,
+  **21 passed in 23.91s** on disposable PostgreSQL 16.14 / pgvector 0.8.2
+  (port 55434).
+  Ruff lint/format (64 Python files), strict mypy (15 application files), all
+  three JavaScript syntax checks and whitespace checks pass. Inspected refreshed
+  desktop/mobile fixture captures; appearance and poster fallback are preserved.
+- Independent Standards review: **zero findings**. Spec review identified a
+  focused spotlight card being hidden when a pending search completes. Added a
+  regression that failed before fixing it: clear spotlight through `replace([])`
+  before hiding it, using the visible request input as the stable fallback.
+  Focused and both retained browser suites pass after the fix; independent
+  rechecks leave **zero remaining Standards or Spec findings**. Poster requests
+  are explicitly held for deterministic late-callback disposal verification.
+- Final full suite, run once: **192 passed in 401.02s (6m 41s)** with
+  `TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55434/postgres .venv/bin/python -m pytest -q --tb=short`.
+  The disposable `pgvector/pgvector:0.8.2-pg16` runtime used PostgreSQL 16.14.
+  Full log: `/tmp/cinemood-issue8-full-tests.log` (session artifact). Browser
+  commands: `.venv/bin/python tests/browser_cards_smoke.py`,
+  `.venv/bin/python tests/browser_ux_smoke.py`, and
+  `PYTHONPATH=. TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55434/postgres .venv/bin/python tests/browser_stream_smoke.py`.
+  The disposable database container and its storage were removed after checks;
+  the retained application/catalog/snapshot storage was untouched.
+- #8 implementation and local verification are complete. Implementation commit:
+  `445f3fc`; the follow-up commit records the review fix and final evidence.
+  Owner acceptance and GitHub closure remain pending.
+- No live provider calls, retained-app rebuild, remote push,
   tracker mutation, hosted CI result or paid infrastructure is claimed. The
   combined #8/#9 integration gate remains required when #9 is implemented.
 
