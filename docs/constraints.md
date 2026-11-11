@@ -2,7 +2,8 @@
 
 `POST /api/recommendations` accepts `{"request":"..."}` (1–2,000 characters).
 It interprets the English request through LangChain structured output using
-`gpt-5.4-mini-2026-03-17`, reasoning disabled, a 1,500-token output limit,
+`gpt-6.1-sol`, with the owner-selected medium reasoning setting and a
+1,500-token output limit,
 15-second provider timeout, and no retries. Mood/themes become `semantic_query`;
 eligible movies are ranked using its embedding. Selection reuses that same query.
 The streaming endpoint uses the same interpretation and selection rules; see
@@ -23,6 +24,14 @@ The streaming endpoint uses the same interpretation and selection rules; see
   not require clarification, even when the visitor has not chosen between them.
   This owner-approved 2026-11-10 refinement replaces the singular request field.
   The movie record still has one `original_language`; no catalog migration is needed.
+- `excluded_original_languages` is a separate list of up to 20 distinct ISO 639-1
+  codes. “Not English”, “non-English” and “other than English” mean `["en"]`
+  here, with an empty allow-list unless another language was requested. Do not
+  ask the model to enumerate the complement: the supported vocabulary has 184
+  codes, while each request list is capped at 20. Both lists can coexist: a movie
+  must satisfy the allow-list if present and must not satisfy the exclusion list.
+  Excluding all allowed languages is a conflict. Unknown/empty catalog language
+  cannot satisfy an active exclusion. These exclusions are never relaxed.
 - Unknown metadata cannot prove a required restriction. The existing schema
   rejects missing runtime/year/language at ingestion; language-list membership rejects
   empty/unknown codes, and genre-filtered queries require at least one genre.
@@ -46,7 +55,8 @@ Successful responses contain `movies` (0–3), `message`, `original_request`,
 selection), `status` (`matches` or `no_match`), and `suggestions` (0–3).
 Interpretation fields are `semantic_query`, `included_genres`, `excluded_genres`,
 `runtime_minutes`, `runtime_operator` (`lt`/`lte`), `year_min`, `year_max`,
-`original_languages`, `unsupported_requirements`, and `clarification`.
+`original_languages`, `excluded_original_languages`, `unsupported_requirements`,
+and `clarification`.
 
 A maximum-runtime restriction remains supported even when no catalog movie can
 meet it. The extraction prompt forbids listing supported restrictions as unchecked.
@@ -77,8 +87,9 @@ restriction, remove only that restriction and query the compatible catalog:
 - Earliest year: lower to the greatest remaining release year, keeping the upper
   bound. Latest year: raise to the smallest remaining year, keeping the lower bound.
 - Language: remove the complete allowed-language list only after an explicit
-  selection, if allowing any original language produces candidates. Other
-  suggestions preserve the full original list.
+  selection, if allowing other original languages produces candidates. Excluded
+  original languages remain enforced; the label states any retained exclusions.
+  Other suggestions preserve the full original allow-list and exclusions.
 - Genres: remove one required genre, trying names in alphabetical order.
 
 Every exact revision is validated and checked with the shared eligibility SQL.
@@ -90,7 +101,7 @@ at most 26 aggregate queries (two per numeric restriction, one per categorical
 option), and stops when three distinct options have been found. All aggregates
 run in one read-only REPEATABLE READ transaction so boundaries and counts refer
 to a consistent catalog snapshot. No minutes/years are scanned incrementally.
-Exclusions and adult-content acquisition rules are never relaxed. Multiple
+Genre/language exclusions and adult-content acquisition rules are never relaxed. Multiple
 simultaneous changes and semantic-similarity thresholds remain outside this policy.
 
 Each suggestion has `label`, `field`, `candidate_count`, revised `interpretation`,
@@ -135,7 +146,10 @@ genre. These correlated predicates avoid multiplying movie rows in a genre join.
 The final three movies receive their sorted genre arrays afterward.
 
 Only a fixed `<` or `<=` operator enters SQL text. All values, arrays, language
-codes and query vectors are bound parameters. Candidate counts and retrieval
+codes and query vectors are bound parameters. Language exclusions use a bound
+negative membership predicate plus membership in the known-language vocabulary;
+missing metadata must not masquerade as a non-excluded language. No database
+migration is required. Candidate counts and retrieval
 share this predicate, preventing divergent filtering policies.
 
 REST integration tests use disposable real PostgreSQL/pgvector databases and
@@ -145,3 +159,30 @@ visible restrictions, no-match, explicit selection, preserved original/exclusion
 unsupported requirements, empty state, provider failure and mobile layout.
 See `progress.md` for executed evidence and limits; deterministic extraction
 fixtures do not establish live-model compatibility or interpretation quality.
+
+
+## Extraction prompt and schema contract — 2026-11-11
+
+The model receives both `PROMPT` and the Pydantic-generated structured-output
+schema through `with_structured_output(Interpretation, ...)`. Every field now
+has a description. The prompt provides a closed capability list, exact genre and
+language vocabularies, normalization rules, and examples. Anything factual outside
+that list must be reported as unchecked rather than claimed as a verified filter.
+The schema and application validators remain authoritative; prompt instructions
+alone do not enforce SQL semantics or guarantee extraction accuracy. This follows
+[OpenAI's structured-output guidance](https://developers.openai.com/api/docs/guides/structured-outputs)
+on field descriptions and task-specific instructions.
+
+Natural equivalents such as sci-fi and murder mystery map to their existing
+catalog genres; associated but unstated genres must not be invented. Explicit
+soft qualifiers (preferably, ideally, if possible) remain in semantic matching.
+Vague preferences such as short/gentle do not invent numeric cutoffs. A genuinely
+ambiguous stated hard comparison needs clarification. “Foreign-language” without
+a reference language needs clarification; English input does not imply an English
+visitor. Country, dubbing and subtitles do not imply original language.
+
+The owner's example maps to `semantic_query="murder mystery"`,
+`included_genres=["Mystery"]`, `runtime_minutes=90`, `runtime_operator="lt"`,
+`original_languages=[]`, `excluded_original_languages=["en"]`. A bounded live
+extraction sample and deterministic verification are recorded in `progress.md`.
+Neither the sample nor schema adherence establishes perfect interpretation.

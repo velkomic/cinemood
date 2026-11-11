@@ -1,5 +1,99 @@
 # Progress
 
+## Bounded interpretation and negative original languages — 2026-11-11
+
+- Owner requested a more explicit, capable extraction prompt and supplied a
+  murder-mystery / under-90-minutes / non-English example. Refreshed project,
+  constraint, architecture and Cupcake context; no additional order returned.
+  The model already receives the Pydantic schema through structured output;
+  added descriptions for every field, a closed supported-filter list, exact
+  vocabularies, paraphrase/soft-preference rules and concrete examples.
+- Added `excluded_original_languages` rather than asking the model to enumerate
+  a language complement. The existing 20-item allow-list cannot represent the
+  183 supported languages other than English. A direct exclusion preserves
+  intent compactly and avoids accidental omission. Both lists validate ISO codes,
+  uniqueness and the all-allowed-languages-excluded conflict. Kept the owner's
+  existing Sol model/medium-reasoning and Luna explanation edits unchanged.
+- Shared parameterized eligibility SQL now enforces negative language membership
+  and requires a known language when an exclusion is active. No schema migration,
+  ingestion or embedding change. Counts and retrieval use the same predicate.
+  No-match alternatives and authenticated selection preserve exclusions; language
+  broadening labels disclose retained exclusions. Request details shows them.
+- REST TDD: direct exclusion failed as clarification before implementation, then
+  passed. The relaxation test caught an incomplete label before its fix.
+  **87 constraint/relaxation integration tests passed in 176.62s** against
+  disposable PostgreSQL/pgvector on port 55434. Covers combined allow/deny lists,
+  invalid/duplicate/conflicting exclusions, unknown catalog language, counts,
+  no-match alternatives and selected results. All three browser suites pass;
+  streamed non-English empty results disclose the exclusion and an explicit
+  runtime adjustment returns only the non-English fixture.
+- Five bounded live extraction-only calls with `gpt-6.1-sol` matched the intended
+  outcomes: the exact owner example, mixed supported/unchecked facts, ambiguous
+  foreign-language wording, soft preferences and a contradictory language request.
+  One observation per case, approximately 2.1–3.2 seconds per call, no retries,
+  at most 1,500 completion tokens each. Artifact:
+  `evaluation/interpretation-results-2026-11-11.json`. Four calls expose usage;
+  their standard-rate estimate including reported cache reads/writes is
+  **USD 0.0086764**. The validation-conflict call has no captured usage, so this
+  is not a total invoice/cost. This does not replace the 20-request relevance
+  evaluation or establish perfect extraction. No further live calls were made.
+- Ruff lint/format, strict mypy, JavaScript syntax and whitespace checks pass.
+  Final full suite, run once: **201 passed in 428.52s (7m 08s)** with
+  `TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55434/postgres .venv/bin/python -m pytest -q --tb=short`.
+  Log: `/tmp/cinemood-interpretation-full.log` (session artifact). Removed the
+  disposable verification container and its storage after the successful run.
+  Rebuilt only the retained app on
+  port 58000; updated schema/prompt and health checks pass and read-only SQL
+  confirms all **1,000 movies** remain. No paid infrastructure, tracker change
+  or remote push. Earlier uncommitted UI changes are preserved.
+
+## Request interpretation disclosure — 2026-11-11
+
+- Owner requested abstracting technical interpretation under Request details.
+  Refreshed Cupcake context (no additional CineMood context). Current restrictions,
+  including the no-supported-restrictions message, now join the original request,
+  mood/themes, original restrictions and selected adjustment inside the collapsed
+  disclosure. Unsupported-requirement warnings and clarification prompts remain
+  visible; retrieval, restrictions and relaxation behavior are unchanged.
+- Updated the desktop/mobile UI regression to verify the summary is hidden
+  initially, visible after opening Request details and hidden again on close.
+  The stream browser's language check now opens the disclosure before reading it.
+  Both browser suites pass against deterministic HTTP fixtures; stream/collection
+  verification used disposable PostgreSQL/pgvector on port 55434, removed after
+  checks. Ruff lint/format, strict mypy, JavaScript syntax and whitespace pass.
+  Inspected the desktop recommendation capture with the simplified summary area.
+- Rebuilt only the retained app on port 58000; health and served JavaScript checks
+  pass. Catalog/snapshot volumes are preserved. Updated PROJECT.md and DESIGN.md
+  with the accepted disclosure behavior. No full Python-suite rerun, model calls,
+  ingestion, paid infrastructure, tracker mutation or push is claimed.
+
+## Spotlight text sharpness correction — 2026-11-11
+
+- Reproduced the reported load/logo-navigation softness: ambient `drift` applied
+  a fractional vertical transform to the entire spotlight track, including all
+  reading text. Pausing retained that transform. Cupcake returned no additional
+  context before the fix.
+- Moved ambient animation and pause selectors to spotlight poster frames only.
+  Titles, metadata and actions remain stationary. Poster-button selection scale,
+  hover/focus/interaction pause and reduced-motion behavior are preserved.
+  `DESIGN.md` now records the poster-only motion boundary.
+- Added a deterministic real-browser regression that samples two animation times;
+  it failed with `Spotlight text moves with posters` before the fix. It now
+  verifies stationary title/facts/actions while poster positions change. Updated
+  the retained stream smoke's motion assertions to observe poster frames.
+- Both `browser_ux_smoke.py` and `browser_stream_smoke.py` pass, including
+  desktop/mobile layouts, motion pause/reduced motion, streaming and collection
+  behavior. Stream smoke used a disposable PostgreSQL/pgvector container on 55434,
+  removed afterward. Ruff lint/format, strict mypy and whitespace checks pass.
+  The full Python integration suite was not rerun for this CSS-only correction;
+  #8's 192-test result below remains its recorded full regression evidence.
+- Rebuilt only the retained app on port 58000, preserving catalog/snapshot volumes.
+  Live-browser initial load and logo navigation both keep text coordinates fixed
+  across animation samples, while poster position changes. Selected details and
+  reduced motion pass; no JavaScript errors. Inspected desktop/mobile captures:
+  `/tmp/cinemood-text-fixed-desktop.png` and `/tmp/cinemood-text-fixed-mobile.png`.
+  No model calls, ingestion, paid infrastructure, tracker updates or push.
+
 ## Shared movie-card lifecycle (#8) — 2026-11-11
 
 - Refetched the complete ready-for-agent issue and comments through GitHub MCP;
@@ -50,7 +144,7 @@
   the retained application/catalog/snapshot storage was untouched.
 - #8 implementation and local verification are complete. Implementation commit:
   `445f3fc`; the follow-up commit records the review fix and final evidence.
-  Owner acceptance and GitHub closure remain pending.
+  Owner acceptance and GitHub closure were completed later on 2026-11-11 (see below).
 - No live provider calls, retained-app rebuild, remote push,
   tracker mutation, hosted CI result or paid infrastructure is claimed. The
   combined #8/#9 integration gate remains required when #9 is implemented.
@@ -661,3 +755,25 @@ The repository documentation and published ticket are the durable context; the p
   visually inspected desktop/mobile screenshots in /tmp/cinemood-*-after.png and
   fixture captures under .impeccable/review/ui-refinements/. No live model calls,
   ingestion, remote publication or paid infrastructure changes were made.
+
+
+## #8 owner acceptance, committed refinements and #9 interview — 2026-11-11
+
+- Owner accepted #8 and explicitly requested closure and committing all current
+  changes. Refetched #8 and comments through GitHub MCP, verified origin as
+  velkomic/cinemood, posted completion evidence, checked implementation criteria
+  and closed #8 as completed. Completion comment:
+  https://github.com/velkomic/cinemood/issues/8#issuecomment-6806117954.
+- Closure relies on recorded #8 evidence: 192 integration checks, all three
+  browser suites, 21 collection REST checks, static checks and zero remaining
+  independent review findings. Later approved refinements have separate recorded
+  evidence, including 201 passing integration checks; no full-suite rerun is
+  claimed during this design/commit step.
+- Accepted #9 Q1–Q3 are recorded in plans/recommendation-session.md. Keep the
+  MVP scope, consolidate session ownership, and use the updated committed
+  baseline with #8 already integrated. #9 remains under review, needs-triage.
+- Rechecked Ruff lint/format, strict mypy, all three JavaScript syntax checks and
+  whitespace checks successfully before committing the existing refinements.
+  Include design sidecar/surface, screenshot reference and extraction evaluation;
+  machine-local hooks, consent and generated cache remain ignored. No new
+  application implementation, provider calls, infrastructure or push occurred.

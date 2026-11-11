@@ -5,6 +5,84 @@ import pytest
 from provider_stub import OpenAIHandler
 
 
+def test_non_english_original_language_is_an_exclusion(loaded_client, extraction):
+    request = "A film originally in a language other than English"
+    extraction[request] = {"excluded_original_languages": ["en"]}
+    response = loaded_client.post("/api/recommendations", json={"request": request})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "matches"
+    assert data["interpretation"]["original_languages"] == []
+    assert data["interpretation"]["excluded_original_languages"] == ["en"]
+    assert [movie["source_id"] for movie in data["movies"]] == ["fixture:garden"]
+
+
+@pytest.mark.parametrize(
+    ("allowed", "excluded", "status", "expected"),
+    [
+        (["en", "fr"], ["en"], "matches", ["fixture:garden"]),
+        (["en"], ["en"], "clarification", []),
+        ([], ["zz"], "clarification", []),
+        ([], ["en", "en"], "clarification", []),
+        ([], "en", "clarification", []),
+        ([], ["en"] * 21, "clarification", []),
+    ],
+)
+def test_allowed_and_excluded_languages_are_validated(
+    loaded_client, extraction, allowed, excluded, status, expected
+):
+    extraction["language request"] = {
+        "original_languages": allowed,
+        "excluded_original_languages": excluded,
+    }
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "language request"}
+    ).json()
+    assert data["status"] == status
+    assert [movie["source_id"] for movie in data["movies"]] == expected
+
+
+def test_language_exclusion_does_not_accept_unknown_catalog_language(
+    loaded_client, extraction, database_url
+):
+    # Arrange missing metadata in a previously searchable English movie.
+    with psycopg.connect(database_url) as conn:
+        conn.execute(
+            "UPDATE movies SET original_language = '' "
+            "WHERE source_id = 'fixture:lantern'"
+        )
+    extraction["not English"] = {"excluded_original_languages": ["en"]}
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "not English"}
+    ).json()
+    assert [movie["source_id"] for movie in data["movies"]] == ["fixture:garden"]
+
+
+def test_relaxation_and_selection_preserve_excluded_languages(
+    loaded_client, extraction
+):
+    extraction["German but not English"] = {
+        "original_languages": ["de"],
+        "excluded_original_languages": ["en"],
+    }
+    data = loaded_client.post(
+        "/api/recommendations", json={"request": "German but not English"}
+    ).json()
+    assert data["movies"] == []
+    assert len(data["suggestions"]) == 1
+    option = data["suggestions"][0]
+    assert option["field"] == "original_languages"
+    assert option["candidate_count"] == 1
+    assert option["interpretation"]["excluded_original_languages"] == ["en"]
+    assert "excluding en" in option["label"]
+    selected = loaded_client.post(
+        "/api/recommendations",
+        json={"request": "German but not English", "selection": option["selection"]},
+    ).json()
+    assert selected["interpretation"]["excluded_original_languages"] == ["en"]
+    assert [movie["source_id"] for movie in selected["movies"]] == ["fixture:garden"]
+
+
 def test_runtime_boundary_and_interpretation(loaded_client):
     response = loaded_client.post(
         "/api/recommendations", json={"request": "quiet comfort under 92 minutes"}

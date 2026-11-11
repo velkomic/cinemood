@@ -191,6 +191,9 @@ def validate_and_describe_change(
             raise SelectionInvalid
         languages = " or ".join(original.original_languages)
         label = f"Change original languages from {languages} to any"
+        if original.excluded_original_languages:
+            excluded = ", ".join(original.excluded_original_languages)
+            label += f" (still excluding {excluded})"
     elif field == "included_genres":
         removed = set(original.included_genres) - set(revised.included_genres)
         if len(removed) != 1 or revised.included_genres != [

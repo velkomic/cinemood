@@ -38,6 +38,7 @@ class OpenAIHandler(BaseHTTPRequestHandler):
                 "year_min": None,
                 "year_max": None,
                 "original_languages": [],
+                "excluded_original_languages": [],
                 "unsupported_requirements": [],
                 "clarification": [],
             }

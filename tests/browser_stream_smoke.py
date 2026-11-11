@@ -49,6 +49,11 @@ OpenAIHandler.interpretations = {
         "included_genres": ["Drama"],
         "excluded_genres": ["Adventure"],
     },
+    "non-English under 90 minutes": {
+        "excluded_original_languages": ["en"],
+        "runtime_minutes": 90,
+        "runtime_operator": "lt",
+    },
 }
 with psycopg.connect(admin, autocommit=True) as conn:
     conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(database)))
@@ -163,21 +168,21 @@ try:
         page.goto("http://127.0.0.1:58004")
         page.locator(".preview-film").first.wait_for()
         assert (
-            page.locator(".preview-track").evaluate(
+            page.locator(".preview-film .poster").first.evaluate(
                 "(el) => getComputedStyle(el).animationName"
             )
             == "drift"
         )
         page.locator("#request").focus()
         assert (
-            page.locator(".preview-track").evaluate(
+            page.locator(".preview-film .poster").first.evaluate(
                 "(el) => getComputedStyle(el).animationPlayState"
             )
             == "paused"
         )
         page.emulate_media(reduced_motion="reduce")
         assert (
-            page.locator(".preview-track").evaluate(
+            page.locator(".preview-film .poster").first.evaluate(
                 "(el) => getComputedStyle(el).animationName"
             )
             == "none"
@@ -360,6 +365,7 @@ try:
 
         search("English or French drama")
         finished()
+        page.get_by_text("Request details", exact=True).click()
         assert (
             "Original languages (any): en or fr"
             in page.locator("#interpretation").inner_text()
@@ -368,6 +374,23 @@ try:
             "The Lantern Kitchen",
             "Garden Letters",
         ]
+
+        search("non-English under 90 minutes")
+        finished()
+        assert page.locator("#results article").count() == 0
+        page.get_by_text("Request details", exact=True).click()
+        assert (
+            "Excluded original languages: en"
+            in page.locator("#interpretation").inner_text()
+        )
+        page.locator("#suggestions button").first.click()
+        finished()
+        assert page.locator("#results h2").all_text_contents() == ["Garden Letters"]
+        page.get_by_text("Request details", exact=True).click()
+        assert (
+            "Excluded original languages: en"
+            in page.locator("#interpretation").inner_text()
+        )
 
         # EOF after provisional text must discard it, including when a frame
         # is incomplete. The fixture response is obtained through the API.

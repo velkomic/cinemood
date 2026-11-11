@@ -8,7 +8,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from cinemood.config import DIMENSIONS, DOCUMENT_VERSION, MODEL, Settings
-from cinemood.constraints import Interpretation
+from cinemood.constraints import LANGUAGES, Interpretation
 from cinemood.embeddings import embed, vector_literal
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -160,6 +160,9 @@ def eligible_filter(
         AND (%s::integer IS NULL OR m.release_year >= %s)
         AND (%s::integer IS NULL OR m.release_year <= %s)
         AND (cardinality(%s::text[]) = 0 OR m.original_language = ANY(%s::text[]))
+        AND (cardinality(%s::text[]) = 0 OR (
+            m.original_language = ANY(%s::text[])
+            AND NOT (m.original_language = ANY(%s::text[]))))
         AND NOT EXISTS (
             SELECT 1 FROM unnest(%s::text[]) wanted(name)
             WHERE NOT EXISTS (
@@ -184,6 +187,9 @@ def eligible_filter(
         constraints.year_max,
         constraints.original_languages,
         constraints.original_languages,
+        constraints.excluded_original_languages,
+        sorted(LANGUAGES),
+        constraints.excluded_original_languages,
         constraints.included_genres,
         constraints.excluded_genres,
         bool(constraints.included_genres or constraints.excluded_genres),

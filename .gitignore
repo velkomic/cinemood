@@ -6,3 +6,8 @@ __pycache__/
 .ruff_cache/
 *.egg-info/
 var/
+
+# Machine-local agent hooks, consent and generated cache
+.codex/
+.impeccable/config.local.json
+.impeccable/hook.cache.json

@@ -116,14 +116,14 @@ summary { cursor: pointer; width: fit-content; }
 #results.is-replaced { animation: settle 200ms ease-out; }
 @keyframes settle { from { opacity: .6; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 #catalog-preview { overflow: hidden; }
-.preview-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 20px; padding: 5px 4px 14px; animation: drift 16s ease-in-out infinite alternate; }
+.preview-track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 20px; padding: 5px 4px 14px; }
 .preview-film { min-width: 0; }
-.preview-film .poster { height: clamp(210px, 34svh, 290px); }
+.preview-film .poster { height: clamp(210px, 34svh, 290px); animation: drift 16s ease-in-out infinite alternate; }
 .preview-film .movie-title { font-size: 17px; margin-top: 12px; min-height: 24px; }
 .preview-film .facts { margin: 3px 0; }
 .preview-film .poster-fallback { padding: 16px; }
 .preview-film .poster-fallback strong { font-size: 20px; }
-#catalog-preview:hover .preview-track, #catalog-preview:focus-within .preview-track, .motion-paused .preview-track { animation-play-state: paused; }
+#catalog-preview:hover .preview-film .poster, #catalog-preview:focus-within .preview-film .poster, .motion-paused .preview-film .poster { animation-play-state: paused; }
 @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-2px); } }
 .muted { color: var(--muted); font-size: 14px; }
 .collection-heading { display: flex; align-items: baseline; gap: 24px; }

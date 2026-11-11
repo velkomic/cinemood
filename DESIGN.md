@@ -202,7 +202,7 @@ Primary and secondary buttons share compact padding and bold text; their frontma
 
 ### Inputs / Fields
 
-The request textarea is transparent within the navy band, automatically growing with its content up to 160px and set at 17px desktop / 16px narrow. Focus uses only a subtle accent underline on the field, never an outline around the whole band. Keyboard focus remains visible. Enter submits; Shift+Enter adds a visible line; composition events do not submit. The field resizes on input, viewport changes and history restoration. Original request and semantic interpretation remain available under Request details, so long requests do not stretch the results header.
+The request textarea is transparent within the navy band, automatically growing with its content up to 160px and set at 17px desktop / 16px narrow. Focus uses only a subtle accent underline on the field, never an outline around the whole band. Keyboard focus remains visible. Enter submits; Shift+Enter adds a visible line; composition events do not submit. The field resizes on input, viewport changes and history restoration. Original request, current/original restrictions, mood/theme interpretation and any selected adjustment remain inside the collapsed Request details disclosure. Unsupported-requirement warnings and clarification prompts stay visible outside it; technical interpretation does not stretch the results header.
 
 ### Navigation
 
@@ -226,7 +226,7 @@ Five spotlight films refresh on homepage entry, browser-history restoration and 
 
 The header stays sticky, slides away after 12px of downward scrolling below its own height, and returns on upward scrolling, keyboard focus or mouse proximity within 20px of the viewport top. Hover/focus keeps it available; reduced motion removes the slide.
 
-The initial track drifts vertically by only 2px over 16 seconds and pauses on interaction. Replacement results use a 200ms settle; inline disclosure and poster selection use short ease-out transitions. Reduced motion removes animations and transitions.
+Initial spotlight posters drift vertically by only 2px over 16 seconds and pause on interaction. Titles, metadata and actions remain stationary so their text stays sharp; never apply ambient transforms to the whole track. Replacement results use a 200ms settle; inline disclosure and poster selection use short ease-out transitions. Reduced motion removes animations and transitions.
 
 ### Save states
 

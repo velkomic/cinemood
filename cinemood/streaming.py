@@ -83,7 +83,7 @@ async def explain(
         range(1, len(passages) + 1)
     )
     model = ChatOpenAI(
-        model="gpt-5.4-mini-2026-03-17",
+        model="gpt-6-luna",
         api_key=SecretStr(settings.api_key),
         base_url=settings.base_url,
         timeout=15,
@@ -172,7 +172,7 @@ async def explain(
                 },
             )
     finally:
-        record("explanation", "gpt-5.4-mini-2026-03-17", usage)
+        record("explanation", "gpt-6-luna", usage)
 
 
 class RecommendationResponse(StreamingResponse):

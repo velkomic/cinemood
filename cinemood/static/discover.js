@@ -26,6 +26,7 @@ function restrictionSummary(parsed) {
   if (parsed.year_min !== null) restrictions.push(`Released from ${parsed.year_min} (inclusive)`);
   if (parsed.year_max !== null) restrictions.push(`Released through ${parsed.year_max} (inclusive)`);
   if (parsed.original_languages.length) restrictions.push(`Original ${parsed.original_languages.length === 1 ? 'language' : 'languages (any)'}: ${parsed.original_languages.join(' or ')}`);
+  if (parsed.excluded_original_languages?.length) restrictions.push(`Excluded original languages: ${parsed.excluded_original_languages.join(', ')}`);
   return restrictions.length ? restrictions.join(' · ') : 'No supported hard restrictions.';
 }
 
@@ -34,15 +35,14 @@ function showInterpretation(data) {
   interpretation.hidden = false;
   const parsed = data.interpretation;
   if (!parsed) return;
-  interpretation.append(paragraph(`Current restrictions: ${restrictionSummary(parsed)}`));
   const context = document.createElement('details');
   context.className = 'request-context';
   const summary = document.createElement('summary');
   summary.textContent = 'Request details';
-  context.append(summary, paragraph(`Original request: ${data.original_request}`), paragraph(`Mood / themes: ${parsed.semantic_query}`));
+  context.append(summary, paragraph(`Original request: ${data.original_request}`), paragraph(`Current restrictions: ${restrictionSummary(parsed)}`), paragraph(`Mood / themes: ${parsed.semantic_query}`));
   if (data.applied_change) context.append(paragraph(`Original restrictions: ${restrictionSummary(data.original_interpretation)}`));
+  if (data.applied_change) context.append(paragraph(`Selected change: ${data.applied_change}. Other restrictions preserved.`));
   interpretation.append(context);
-  if (data.applied_change) interpretation.append(paragraph(`Selected change: ${data.applied_change}. Other restrictions preserved.`));
   if (parsed.unsupported_requirements.length) {
     const warning = document.createElement('div');
     warning.className = 'warning';

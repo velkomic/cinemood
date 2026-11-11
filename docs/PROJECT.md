@@ -60,7 +60,7 @@ are private to the card module. Collection retains requests, anonymous bootstrap
 membership and load/mutation ordering. The accepted contract remains in
 `plans/movie-card-lifecycle.md`; verification includes 192 passing integration
 checks, all three browser suites, static checks and zero remaining independent
-review findings, recorded in `progress.md`. Owner acceptance is pending.
+review findings, recorded in `progress.md`. The owner accepted #8 and requested closure on 2026-11-11; GitHub #8 is closed.
 #9's session design and combined integration remain
 separate work.
 
@@ -113,3 +113,36 @@ color, stable Save transitions, and navigation that hides on downward scroll and
 returns on upward scroll or pointer proximity to the viewport top. Keep the
 existing lounge design, responsive layout and reduced-motion support. This
 supersedes the four-film spotlight count; search and collection contracts remain.
+
+
+## Owner UX refinement — request disclosure
+
+The owner requested moving technical request interpretation under the collapsed
+Request details control: current restrictions (including the no-restrictions
+message), original request, mood/themes, original restrictions and selected
+adjustment. Unsupported-requirement warnings and clarification prompts remain
+visible because they affect how visitors should interpret the result.
+
+
+## Owner refinement — bounded natural-language interpretation
+
+The owner requested clearer model knowledge of supported filters, faithful
+interpretation of ordinary paraphrases and negative language requests, and less
+need to spell out structured fields. The extraction prompt now describes a closed
+capability list and each schema field. Negative original-language requests use
+a direct exclusion list, rather than requiring the model to enumerate every
+allowed language. Existing explicit language/genre exclusions survive no-match
+alternatives and selection. New factual filter families remain outside scope.
+See `constraints.md` for semantics and `progress.md` for executed evidence.
+
+## Recommendation-session design review — 2026-11-11
+
+The owner accepted Q1–Q3 in `plans/recommendation-session.md`: prioritize the
+working MVP; preserve current behavior while putting HTTP stream, protocol,
+explanation validity and lifecycle ownership in one session module. Discover
+retains DOM/form/interpretation/suggestion presentation. Later features extend
+the MVP separately. #8 is accepted and closed; #9 remains under design review.
+Use a new common committed handoff including #8 and the current approved
+refinements. Independent module/test work may proceed concurrently after design
+acceptance, with one owner for shared page integration and combined verification.
+This supersedes the earlier proposal to implement #8 and #9 concurrently.

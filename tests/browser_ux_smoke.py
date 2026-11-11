@@ -50,6 +50,7 @@ parsed = dict(
     year_min=None,
     year_max=None,
     original_languages=[],
+    excluded_original_languages=[],
     semantic_query="UI verification fixtures",
     unsupported_requirements=[],
     clarification=[],
@@ -163,6 +164,25 @@ try:
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(base, wait_until="networkidle")
         assert page.locator(".preview-film").count() == 5
+        # Ambient motion must never move the film's reading text or controls.
+        page.emulate_media(reduced_motion="no-preference")
+        motion = page.locator(".preview-film").first.evaluate("""card => {
+            const track = card.parentElement;
+            const animations = track.getAnimations({subtree: true});
+            const sample = time => {
+                for (const animation of animations) {
+                    animation.pause();
+                    animation.currentTime = time;
+                }
+                return ['.movie-title', '.facts', '.movie-actions', '.poster'].map(
+                    selector => card.querySelector(selector)
+                        .getBoundingClientRect().top);
+            };
+            return [sample(0), sample(8000)];
+        }""")
+        assert motion[0][:3] == motion[1][:3], "Spotlight text moves with posters"
+        assert motion[0][3] != motion[1][3], "Poster ambient motion was lost"
+        page.emulate_media(reduced_motion="reduce")
         first = page.locator(".preview-film").evaluate_all(
             "(els)=>els.map(el=>el.dataset.movieId)"
         )
@@ -214,6 +234,18 @@ try:
         assert field.evaluate("(el)=>getComputedStyle(el).outlineStyle") == "none"
         field.press("Enter")
         page.locator("#results .movie").nth(4).wait_for()
+        request_details = page.get_by_text("Request details", exact=True)
+        restrictions = page.get_by_text(
+            "Current restrictions: No supported hard restrictions.", exact=True
+        )
+        assert not restrictions.is_visible()
+        request_details.click()
+        assert restrictions.is_visible()
+        assert page.get_by_text(
+            "Original request: UI verification fixtures", exact=True
+        ).is_visible()
+        request_details.click()
+        assert not restrictions.is_visible()
         assert searches == ["UI verification fixtures"]
         assert page.locator("#results .movie").count() == 5
         # Mouse submission must exercise the same path as Enter, including retry.

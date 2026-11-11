@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-10T22:02:41.398397+00:00",
+  "title": "Design System: CineMood",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0119 269.56)",
+          "oklch(26% 0.0222 269.56)",
+          "oklch(38% 0.0290 269.56)",
+          "oklch(49% 0.0341 269.56)",
+          "oklch(61% 0.0341 269.56)",
+          "oklch(72% 0.0290 269.56)",
+          "oklch(84% 0.0188 269.56)",
+          "oklch(95% 0.0068 269.56)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.0163 265.25)",
+          "oklch(26% 0.0304 265.25)",
+          "oklch(38% 0.0397 265.25)",
+          "oklch(49% 0.0467 265.25)",
+          "oklch(61% 0.0467 265.25)",
+          "oklch(72% 0.0397 265.25)",
+          "oklch(84% 0.0257 265.25)",
+          "oklch(95% 0.0093 265.25)"
+        ]
+      },
+      "surface-raised": {
+        "role": "neutral",
+        "displayName": "Surface Raised",
+        "tonalRamp": [
+          "oklch(15% 0.0204 264.17)",
+          "oklch(26% 0.0379 264.17)",
+          "oklch(38% 0.0495 264.17)",
+          "oklch(49% 0.0583 264.17)",
+          "oklch(61% 0.0583 264.17)",
+          "oklch(72% 0.0495 264.17)",
+          "oklch(84% 0.0320 264.17)",
+          "oklch(95% 0.0117 264.17)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0053 273.85)",
+          "oklch(26% 0.0098 273.85)",
+          "oklch(38% 0.0128 273.85)",
+          "oklch(49% 0.0150 273.85)",
+          "oklch(61% 0.0150 273.85)",
+          "oklch(72% 0.0128 273.85)",
+          "oklch(84% 0.0083 273.85)",
+          "oklch(95% 0.0030 273.85)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0143 265.02)",
+          "oklch(26% 0.0265 265.02)",
+          "oklch(38% 0.0347 265.02)",
+          "oklch(49% 0.0408 265.02)",
+          "oklch(61% 0.0408 265.02)",
+          "oklch(72% 0.0347 265.02)",
+          "oklch(84% 0.0224 265.02)",
+          "oklch(95% 0.0082 265.02)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0385 265.93)",
+          "oklch(26% 0.0715 265.93)",
+          "oklch(38% 0.0935 265.93)",
+          "oklch(49% 0.1100 265.93)",
+          "oklch(61% 0.1100 265.93)",
+          "oklch(72% 0.0935 265.93)",
+          "oklch(84% 0.0605 265.93)",
+          "oklch(95% 0.0220 265.93)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Accent Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0349 267.79)",
+          "oklch(26% 0.0648 267.79)",
+          "oklch(38% 0.0848 267.79)",
+          "oklch(49% 0.0998 267.79)",
+          "oklch(61% 0.0998 267.79)",
+          "oklch(72% 0.0848 267.79)",
+          "oklch(84% 0.0549 267.79)",
+          "oklch(95% 0.0200 267.79)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15% 0.0179 264.90)",
+          "oklch(26% 0.0333 264.90)",
+          "oklch(38% 0.0436 264.90)",
+          "oklch(49% 0.0512 264.90)",
+          "oklch(61% 0.0512 264.90)",
+          "oklch(72% 0.0436 264.90)",
+          "oklch(84% 0.0282 264.90)",
+          "oklch(95% 0.0102 264.90)"
+        ]
+      },
+      "warning": {
+        "role": "neutral",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15% 0.0290 81.33)",
+          "oklch(26% 0.0539 81.33)",
+          "oklch(38% 0.0705 81.33)",
+          "oklch(49% 0.0830 81.33)",
+          "oklch(61% 0.0830 81.33)",
+          "oklch(72% 0.0705 81.33)",
+          "oklch(84% 0.0456 81.33)",
+          "oklch(95% 0.0166 81.33)"
+        ]
+      },
+      "warning-bg": {
+        "role": "neutral",
+        "displayName": "Warning Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0053 71.46)",
+          "oklch(26% 0.0099 71.46)",
+          "oklch(38% 0.0129 71.46)",
+          "oklch(49% 0.0152 71.46)",
+          "oklch(61% 0.0152 71.46)",
+          "oklch(72% 0.0129 71.46)",
+          "oklch(84% 0.0083 71.46)",
+          "oklch(95% 0.0030 71.46)"
+        ]
+      },
+      "secondary-hover": {
+        "role": "neutral",
+        "displayName": "Secondary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0268 263.85)",
+          "oklch(26% 0.0498 263.85)",
+          "oklch(38% 0.0651 263.85)",
+          "oklch(49% 0.0765 263.85)",
+          "oklch(61% 0.0765 263.85)",
+          "oklch(72% 0.0651 263.85)",
+          "oklch(84% 0.0421 263.85)",
+          "oklch(95% 0.0153 263.85)"
+        ]
+      },
+      "poster-ground": {
+        "role": "neutral",
+        "displayName": "Poster Ground",
+        "tonalRamp": [
+          "oklch(15% 0.0086 267.81)",
+          "oklch(26% 0.0160 267.81)",
+          "oklch(38% 0.0209 267.81)",
+          "oklch(49% 0.0246 267.81)",
+          "oklch(61% 0.0246 267.81)",
+          "oklch(72% 0.0209 267.81)",
+          "oklch(84% 0.0135 267.81)",
+          "oklch(95% 0.0049 267.81)"
+        ]
+      },
+      "explanation": {
+        "role": "neutral",
+        "displayName": "Explanation",
+        "tonalRamp": [
+          "oklch(15% 0.0109 265.31)",
+          "oklch(26% 0.0203 265.31)",
+          "oklch(38% 0.0265 265.31)",
+          "oklch(49% 0.0312 265.31)",
+          "oklch(61% 0.0312 265.31)",
+          "oklch(72% 0.0265 265.31)",
+          "oklch(84% 0.0172 265.31)",
+          "oklch(95% 0.0062 265.31)"
+        ]
+      },
+      "save-bg": {
+        "role": "neutral",
+        "displayName": "Save Bg",
+        "tonalRamp": [
+          "oklch(15% 0.0254 264.23)",
+          "oklch(26% 0.0471 264.23)",
+          "oklch(38% 0.0616 264.23)",
+          "oklch(49% 0.0725 264.23)",
+          "oklch(61% 0.0725 264.23)",
+          "oklch(72% 0.0616 264.23)",
+          "oklch(84% 0.0399 264.23)",
+          "oklch(95% 0.0145 264.23)"
+        ]
+      },
+      "save-ink": {
+        "role": "neutral",
+        "displayName": "Save Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0125 268.29)",
+          "oklch(26% 0.0232 268.29)",
+          "oklch(38% 0.0303 268.29)",
+          "oklch(49% 0.0357 268.29)",
+          "oklch(61% 0.0357 268.29)",
+          "oklch(72% 0.0303 268.29)",
+          "oklch(84% 0.0196 268.29)",
+          "oklch(95% 0.0071 268.29)"
+        ]
+      },
+      "save-hover": {
+        "role": "neutral",
+        "displayName": "Save Hover",
+        "tonalRamp": [
+          "oklch(15% 0.0301 262.45)",
+          "oklch(26% 0.0559 262.45)",
+          "oklch(38% 0.0731 262.45)",
+          "oklch(49% 0.0860 262.45)",
+          "oklch(61% 0.0860 262.45)",
+          "oklch(72% 0.0731 262.45)",
+          "oklch(84% 0.0473 262.45)",
+          "oklch(95% 0.0172 262.45)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Collection page heading."
+      },
+      "section-title": {
+        "displayName": "Section Title",
+        "purpose": "Catalog and results section headings."
+      },
+      "film-title": {
+        "displayName": "Film Title",
+        "purpose": "Film titles below posters."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default reading text and controls."
+      },
+      "explanation": {
+        "displayName": "Explanation",
+        "purpose": "Recommendation explanation; maximum width 65ch."
+      },
+      "facts": {
+        "displayName": "Facts",
+        "purpose": "Tabular movie metadata."
+      },
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "CineMood wordmark."
+      },
+      "request": {
+        "displayName": "Request",
+        "purpose": "Natural-language request entry."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "background-color 160ms ease-out, color 160ms ease-out",
+        "purpose": "Enabled buttons and links."
+      },
+      {
+        "name": "catalog-drift",
+        "value": "drift 16s ease-in-out infinite alternate",
+        "purpose": "translateX(0) to translateX(-24px); pause on interaction, hover and focus."
+      },
+      {
+        "name": "result-settle",
+        "value": "settle 200ms ease-out",
+        "purpose": "Opacity .6 to 1 and translateY(5px) to none on replacement."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none !important; transition: none !important",
+        "purpose": "All elements and pseudo-elements when prefers-reduced-motion is reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "narrow",
+        "value": "650px"
+      },
+      {
+        "name": "fullscreen-details",
+        "value": "900px"
+      },
+      {
+        "name": "compact-desktop-details",
+        "value": "901px\u20131250px"
+      },
+      {
+        "name": "wide",
+        "value": "1800px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Find movies",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Bold compact primary action.",
+      "html": "<button class=\"ds-primary\">Find movies</button>",
+      "css": ".ds-primary{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;border:0;border-radius:8px;font-size:16px;font-weight:700;padding:12px 22px;color:var(--ground, #0b1020);background:var(--accent, #759dff)}.ds-primary:hover:not(:disabled){background:var(--accent-hover, #a2bcff)}.ds-primary:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}.ds-primary:disabled{opacity:.65;cursor:default}"
+    },
+    {
+      "name": "Try again",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bold compact secondary action.",
+      "html": "<button class=\"ds-secondary\">Try again</button>",
+      "css": ".ds-secondary{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;border:0;border-radius:8px;font-size:16px;font-weight:700;padding:12px 22px;color:var(--ink, #f1f4ff);background:var(--surface-raised, #1d2b49)}.ds-secondary:hover:not(:disabled){background:var(--secondary-hover, #2d416b)}.ds-secondary:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}.ds-secondary:disabled{opacity:.65;cursor:default}"
+    },
+    {
+      "name": "Details",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Underlined secondary action.",
+      "html": "<button class=\"ds-text\">Details</button>",
+      "css": ".ds-text{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;border:0;background:transparent;color:var(--muted, #b4c1dc);padding:9px 12px;text-decoration:underline;text-underline-offset:4px;font-size:14px}.ds-text:hover{color:var(--ink, #f1f4ff)}.ds-text:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}"
+    },
+    {
+      "name": "Save to collection",
+      "kind": "button",
+      "refersTo": "button-save",
+      "description": "Compact save/remove action.",
+      "html": "<button class=\"ds-save\">Save to collection</button>",
+      "css": ".ds-save{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;border:0;border-radius:7px;background:var(--save-bg, #22375f);color:var(--save-ink, #e0e9ff);padding:9px 14px;font-size:13px;font-weight:600}.ds-save:hover:not(:disabled){background:var(--save-hover, #304d80)}.ds-save:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}.ds-save:disabled{opacity:.65;cursor:default}"
+    },
+    {
+      "name": "Request band",
+      "kind": "input",
+      "refersTo": "request-band",
+      "description": "Transparent request field inside its tinted functional surface.",
+      "html": "<div class=\"ds-band\"><label for=\"ds-request\">What would you like to watch?</label><textarea id=\"ds-request\" rows=\"1\" placeholder=\"A mood, a theme, a story you\u2019re looking for\u2026\"></textarea></div>",
+      "css": ".ds-band{display:flex;align-items:center;gap:20px;padding:10px 16px;background:var(--surface, #141e35);border-radius:12px;font-family:\"DM Sans\",sans-serif}.ds-band label{font-size:13px;color:var(--muted, #b4c1dc)}.ds-band textarea{min-height:38px;max-height:160px;width:100%;background:transparent;color:var(--ink, #f1f4ff);border:0;resize:vertical;font-family:inherit;font-size:17px;line-height:1.5;padding:5px 0;caret-color:var(--accent, #759dff)}.ds-band textarea::placeholder{color:var(--muted, #b4c1dc);opacity:1}.ds-band textarea:focus{outline:0;border-bottom:1px solid var(--accent, #759dff)}"
+    },
+    {
+      "name": "Main navigation",
+      "kind": "nav",
+      "description": "Active-page accent underline with muted adjacent links.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main\"><a href=\"#discover\" aria-current=\"page\">Discover</a><a href=\"#collection\">My collection</a></nav>",
+      "css": ".ds-nav{display:flex;gap:35px;height:60px;font:15px \"DM Sans\",sans-serif}.ds-nav a{display:flex;align-items:center;padding-top:3px;border-bottom:3px solid transparent;text-decoration:none;color:var(--muted, #b4c1dc);transition:color 160ms ease-out}.ds-nav a[aria-current=\"page\"]{color:var(--ink, #f1f4ff);border-color:var(--accent, #759dff)}.ds-nav a:hover{color:var(--ink, #f1f4ff)}.ds-nav a:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}"
+    },
+    {
+      "name": "Film entry",
+      "kind": "card",
+      "description": "Open comparison entry with the implemented missing-poster fallback.",
+      "html": "<article class=\"ds-film\"><button class=\"ds-poster\" aria-label=\"Open film details\"><strong>Film title</strong><small>Poster unavailable</small></button><h2>Film title</h2><p>2024 \u00b7 112 min \u00b7 Drama</p></article>",
+      "css": ".ds-film{max-width:420px;font-family:\"DM Sans\",sans-serif;color:var(--ink, #f1f4ff)}.ds-poster{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;display:flex;flex-direction:column;justify-content:end;align-items:start;gap:14px;width:100%;height:clamp(170px,26svh,225px);padding:24px;border:0;border-radius:12px;background:var(--surface-raised, #1d2b49);color:var(--ink, #f1f4ff);text-align:left}.ds-poster strong{font-family:Manrope,sans-serif;font-size:20px;line-height:1.25;letter-spacing:-.025em}.ds-poster small{font-size:12px;color:var(--muted, #b4c1dc)}.ds-poster:hover{outline:1px solid var(--accent, #759dff);outline-offset:-1px}.ds-poster:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}.ds-film h2{font-family:Manrope,sans-serif;font-size:17px;line-height:1.3;letter-spacing:-.025em;margin:12px 0 5px}.ds-film p{font-size:12px;line-height:1.6;color:var(--muted, #b4c1dc);font-variant-numeric:tabular-nums;margin:0 0 16px}"
+    },
+    {
+      "name": "Restriction suggestion",
+      "kind": "button",
+      "description": "Explicit optional restriction change.",
+      "html": "<button class=\"ds-suggestion\">Remove runtime limit</button>",
+      "css": ".ds-suggestion{font-family:\"DM Sans\",sans-serif;cursor:pointer;min-height:40px;transition:background-color 160ms ease-out,color 160ms ease-out;background:var(--surface-raised, #1d2b49);border:1px solid var(--line, #34415d);color:var(--ink, #f1f4ff);border-radius:8px;padding:12px 16px;text-align:left;font-size:16px}.ds-suggestion:hover{border-color:var(--accent, #759dff)}.ds-suggestion:focus-visible{outline:2px solid var(--accent-hover, #a2bcff);outline-offset:5px}"
+    },
+    {
+      "name": "Warning",
+      "kind": "custom",
+      "refersTo": "warning",
+      "description": "Warm semantic inset in the request context.",
+      "html": "<p class=\"ds-warning\">Some requirements could not be checked.</p>",
+      "css": ".ds-warning{font:14px/1.6 \"DM Sans\",sans-serif;margin-top:14px;padding:12px 16px;background:var(--warning-bg, #302a23);color:var(--warning, #f5d49a);border-radius:8px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Screening lounge refined",
+    "overview": "Screening lounge refined: compact requests, four refreshable spotlight films, five comparable recommendations and inline catalog details. Existing blue-black, navy, periwinkle, Manrope and DM Sans remain the visual language.",
+    "keyCharacteristics": [
+      "Compact five-film comparison.",
+      "Four refreshable spotlight films.",
+      "Inline details with intact posters.",
+      "Explicit save, pending, saved and error states."
+    ],
+    "rules": [
+      {
+        "name": "The Open Film Rule",
+        "body": "Film entries sit directly on the ground; keep their title, facts and actions outside the poster frame.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Intact Poster Rule",
+        "body": "Contain catalog artwork in its frame and retain the title fallback when the image is unavailable.",
+        "section": "layout"
+      },
+      {
+        "name": "The Quiet Motion Rule",
+        "body": "Pause ambient movement when the visitor interacts; disable animation and transitions for reduced motion.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do use Manrope for identity and headings and DM Sans for controls and reading text.",
+      "Do preserve visible keyboard focus, explicit detail close controls, Escape dismissal and focus return.",
+      "Do keep factual metadata and explanations beneath the poster and preserve required TMDB credits.",
+      "Do use the same film presentation in Discover and My collection."
+    ],
+    "donts": [
+      "Don't crop portrait artwork to fill a landscape comparison frame.",
+      "Don't wrap each film entry in another raised card or add decorative shadows.",
+      "Don't hide warnings about unchecked requirements in visual decoration.",
+      "Don't continue ambient animation after interaction or when reduced motion is requested."
+    ]
+  }
+}

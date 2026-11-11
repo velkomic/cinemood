@@ -1,0 +1,269 @@
+{
+  "results": [
+    {
+      "case": "reported",
+      "passed": true,
+      "mismatches": [],
+      "interpretation": {
+        "semantic_query": "murder mystery",
+        "included_genres": [
+          "Mystery"
+        ],
+        "excluded_genres": [],
+        "runtime_minutes": 90,
+        "runtime_operator": "lt",
+        "year_min": null,
+        "year_max": null,
+        "original_languages": [],
+        "excluded_original_languages": [
+          "en"
+        ],
+        "unsupported_requirements": [],
+        "clarification": []
+      },
+      "seconds": 3.17,
+      "usage": [
+        {
+          "stage": "interpretation",
+          "model": "gpt-6.1-sol",
+          "tokens": {
+            "input_tokens": 2033,
+            "output_tokens": 68,
+            "total_tokens": 2101,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 0,
+              "cache_creation": 2030
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "mixed",
+      "passed": true,
+      "mismatches": [],
+      "interpretation": {
+        "semantic_query": "hopeful",
+        "included_genres": [
+          "Drama"
+        ],
+        "excluded_genres": [
+          "Horror"
+        ],
+        "runtime_minutes": 120,
+        "runtime_operator": "lte",
+        "year_min": null,
+        "year_max": null,
+        "original_languages": [
+          "fr",
+          "ja"
+        ],
+        "excluded_original_languages": [],
+        "unsupported_requirements": [
+          "Current Netflix availability"
+        ],
+        "clarification": []
+      },
+      "seconds": 2.93,
+      "usage": [
+        {
+          "stage": "interpretation",
+          "model": "gpt-6.1-sol",
+          "tokens": {
+            "input_tokens": 2035,
+            "output_tokens": 75,
+            "total_tokens": 2110,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 2008,
+              "cache_creation": 24
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "ambiguous",
+      "passed": true,
+      "mismatches": [],
+      "interpretation": {
+        "semantic_query": "movie",
+        "included_genres": [
+          "Mystery"
+        ],
+        "excluded_genres": [],
+        "runtime_minutes": 1,
+        "runtime_operator": "lt",
+        "year_min": null,
+        "year_max": null,
+        "original_languages": [],
+        "excluded_original_languages": [],
+        "unsupported_requirements": [
+          "Current Netflix availability"
+        ],
+        "clarification": [
+          "Which original language should be excluded?"
+        ]
+      },
+      "seconds": 2.6,
+      "usage": [
+        {
+          "stage": "interpretation",
+          "model": "gpt-6.1-sol",
+          "tokens": {
+            "input_tokens": 2025,
+            "output_tokens": 76,
+            "total_tokens": 2101,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 2008,
+              "cache_creation": 14
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "soft",
+      "passed": true,
+      "mismatches": [],
+      "interpretation": {
+        "semantic_query": "short, gentle, preferably French",
+        "included_genres": [],
+        "excluded_genres": [],
+        "runtime_minutes": null,
+        "runtime_operator": null,
+        "year_min": null,
+        "year_max": null,
+        "original_languages": [],
+        "excluded_original_languages": [],
+        "unsupported_requirements": [],
+        "clarification": []
+      },
+      "seconds": 2.21,
+      "usage": [
+        {
+          "stage": "interpretation",
+          "model": "gpt-6.1-sol",
+          "tokens": {
+            "input_tokens": 2023,
+            "output_tokens": 66,
+            "total_tokens": 2089,
+            "input_token_details": {
+              "audio": 0,
+              "cache_read": 2008,
+              "cache_creation": 12
+            },
+            "output_token_details": {
+              "audio": 0,
+              "reasoning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case": "conflict",
+      "passed": true,
+      "outcome": "InterpretationInvalid",
+      "seconds": 2.07,
+      "usage": [
+        {
+          "stage": "interpretation",
+          "model": "gpt-6.1-sol",
+          "tokens": null
+        }
+      ]
+    }
+  ],
+  "date": "2026-11-11",
+  "model": "gpt-6.1-sol",
+  "scope": "Five bounded extraction-only checks; no retrieval or explanations",
+  "limits": {
+    "calls": 5,
+    "max_completion_tokens_per_call": 1500,
+    "timeout_seconds": 15,
+    "retries": 0
+  },
+  "requests": {
+    "reported": "A movie about a murder mystery under 90 minutes long and originally in language other than English",
+    "mixed": "A hopeful French or Japanese drama with no horror, no longer than 2 hours, available on Netflix",
+    "ambiguous": "A foreign-language mystery under 1 minute on Netflix",
+    "soft": "A short, gentle film, preferably French",
+    "conflict": "An originally English-language film, but not originally in English"
+  },
+  "reported_usage_standard_estimate_usd": 0.0086764,
+  "cost_notes": "Estimate covers four calls with returned usage, including reported cache reads/writes. The conflict call has no captured usage after validation failure, so this is not a total cost or invoice. All five calls were bounded by the recorded token limits.",
+  "limitations": "One observation per request; deterministic integration fixtures do not test model understanding. This sample does not replace the 20-request relevance evaluation or establish perfect extraction.",
+  "prompt_sha256": "6ed8cc191abb7c1134f8270b245ae7c8065d0f6ca472817ee1627251e6936564",
+  "pydantic_schema_sha256": "99e736c90ac0c61490adf21f53c08d167844db07cc7e88ef051c081fa31ac3f5",
+  "expected": {
+    "reported": {
+      "semantic_query": "murder mystery",
+      "included_genres": [
+        "Mystery"
+      ],
+      "runtime_minutes": 90,
+      "runtime_operator": "lt",
+      "original_languages": [],
+      "excluded_original_languages": [
+        "en"
+      ],
+      "unsupported_requirements": [],
+      "clarification": []
+    },
+    "mixed": {
+      "included_genres": [
+        "Drama"
+      ],
+      "excluded_genres": [
+        "Horror"
+      ],
+      "runtime_minutes": 120,
+      "runtime_operator": "lte",
+      "original_languages": [
+        "fr",
+        "ja"
+      ],
+      "excluded_original_languages": [],
+      "unsupported_requirements_contains": "Netflix",
+      "clarification": []
+    },
+    "ambiguous": {
+      "included_genres": [
+        "Mystery"
+      ],
+      "runtime_minutes": 1,
+      "runtime_operator": "lt",
+      "original_languages": [],
+      "excluded_original_languages": [],
+      "unsupported_requirements_contains": "Netflix",
+      "clarification_required": true
+    },
+    "soft": {
+      "included_genres": [],
+      "runtime_minutes": null,
+      "runtime_operator": null,
+      "original_languages": [],
+      "excluded_original_languages": [],
+      "unsupported_requirements": [],
+      "clarification": []
+    },
+    "conflict": {
+      "required_outcome": "Clarification or validation rejection; never retrieve an unrestricted result"
+    }
+  }
+}
