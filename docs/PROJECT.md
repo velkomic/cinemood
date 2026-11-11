@@ -162,3 +162,13 @@ explanation accumulation/retention and cancellation. Discover renders outcomes
 through the shared card interface. Scope remains the accepted Q1–Q10 contract;
 SQL, server payloads, ranking and collection ownership are unchanged. Actual
 verification and remaining acceptance are recorded in `progress.md`.
+
+
+## #9 owner acceptance and publication — 2026-11-11
+
+The owner accepted #9 and requested push/closure. `main` was pushed through
+`adefae1`, including the accepted prerequisite history. GitHub #9 is closed as
+completed with all acceptance criteria checked. Verification remains 201 passing
+integration tests, all four browser suites, static checks and zero remaining
+independent review findings; see `progress.md`. T6 paid provisioning remains
+separately gated by explicit approval of the resource/cost plan.
