@@ -83,7 +83,7 @@ form.addEventListener('submit', async (event) => {
   }
   requestInput.value = request;
   resizeRequest();
-  await search(request);
+  await recommendationSession.start(request);
 });
 
 const cancelButton = document.querySelector('#cancel');
@@ -123,16 +123,12 @@ function showResult(data) {
     const option = document.createElement('button');
     option.type = 'button';
     option.textContent = `${suggestion.label} (${suggestion.candidate_count} eligible)`;
-    option.addEventListener('click', () => search(data.original_request, suggestion.selection));
+    option.addEventListener('click', () => recommendationSession.start(data.original_request, suggestion.selection));
     suggestions.append(option);
   }
   const updateExplanation = recommendationCards.replace(data.movies);
   results.classList.add('is-replaced');
   return updateExplanation;
-}
-
-function search(request, selection = null) {
-  return recommendationSession.start(request, selection);
 }
 
 // Each homepage visit and explicit shuffle asks for a fresh, bounded selection.

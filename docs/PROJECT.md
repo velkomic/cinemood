@@ -61,8 +61,8 @@ membership and load/mutation ordering. The accepted contract remains in
 `plans/movie-card-lifecycle.md`; verification includes 192 passing integration
 checks, all three browser suites, static checks and zero remaining independent
 review findings, recorded in `progress.md`. The owner accepted #8 and requested closure on 2026-11-11; GitHub #8 is closed.
-#9's session design and combined integration remain
-separate work.
+#9's session implementation and combined verification are recorded below
+and in `progress.md`.
 
 ## Planning workflow
 
@@ -151,7 +151,8 @@ This supersedes the earlier proposal to implement #8 and #9 concurrently.
 preserved MVP behavior. The complete session contract and tracker draft are in
 `plans/recommendation-session.md` and `plans/recommendation-session-issue.md`.
 Final shared understanding is confirmed. The full accepted contract is published
-to GitHub #9 with ready-for-agent; there is no #9 implementation claim.
+to GitHub #9 with ready-for-agent; subsequent implementation evidence is recorded
+below and in `progress.md`.
 
 
 ## Recommendation-session implementation (#9) — 2026-11-11

@@ -14,6 +14,8 @@ function createRecommendationSession(onOutcome) {
     if (!object(value) || !strings(value.included_genres) || !strings(value.excluded_genres) ||
         !strings(value.original_languages) || !strings(value.unsupported_requirements) ||
         !strings(value.clarification) || typeof value.semantic_query !== 'string' ||
+        ![null, 'lt', 'lte'].includes(value.runtime_operator) ||
+        ((value.runtime_minutes === null) !== (value.runtime_operator === null)) ||
         !optionalNumber(value.runtime_minutes) || !optionalNumber(value.year_min) ||
         !optionalNumber(value.year_max) ||
         (value.excluded_original_languages !== undefined && !strings(value.excluded_original_languages))) invalid();
@@ -31,6 +33,7 @@ function createRecommendationSession(onOutcome) {
       ids.add(movie.id);
     }
     if (data.original_request !== undefined && typeof data.original_request !== 'string') invalid();
+    if (data.suggestions?.length && (typeof data.original_request !== 'string' || !data.original_request.trim())) invalid();
     if (data.interpretation != null) interpretation(data.interpretation);
     if (data.applied_change != null) {
       if (typeof data.applied_change !== 'string') invalid();

@@ -10,6 +10,18 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 MOVIE = dict(json.loads((ROOT / "fixtures/movies.json").read_text())[0], id=1)
+PARSED = dict(
+    included_genres=[],
+    excluded_genres=[],
+    original_languages=[],
+    unsupported_requirements=[],
+    clarification=[],
+    semantic_query="movie",
+    runtime_minutes=90,
+    runtime_operator="lt",
+    year_min=None,
+    year_max=None,
+)
 scenarios = {}
 requests = []
 
@@ -128,9 +140,34 @@ try:
             fragmented=True,
         )
         assert final_status(outcomes)["quiet"]
-        for suffix in ("", "\n\n"):
-            rejected("oversized" + repr(suffix), exact + " " + suffix)
-        rejected("oversized split", [exact.encode(), b" ", b"\n", b"\n"])
+        outcomes = rejected(
+            "oversized complete frame",
+            exact + " " + "\n\n" + result(2) + frame("complete", 3),
+        )
+        assert final_status(outcomes)["message"] == "Invalid recommendation stream."
+        # Incomplete overflow must fail before EOF, even if the peer stays open.
+        gate = threading.Event()
+        scenarios["oversized incomplete"] = {"chunks": [exact.encode(), b" ", gate]}
+        page.evaluate(
+            "outcomes.length = 0; window.run = session.start('oversized incomplete')"
+        )
+        try:
+            page.wait_for_function("outcomes.some(o => o.type === 'busy' && !o.busy)")
+            page.evaluate("run")
+            assert final_status(page.evaluate("outcomes"))["message"] == (
+                "Invalid recommendation stream."
+            )
+        finally:
+            gate.set()
+        rejected(
+            "oversized split delimiter",
+            [
+                exact.encode(),
+                b" ",
+                b"\n",
+                ("\n" + result(2) + frame("complete", 3)).encode(),
+            ],
+        )
 
         outcomes = run("terminal whitespace", valid + " \n\n\t\n")
         assert final_status(outcomes)["quiet"], outcomes
@@ -160,6 +197,12 @@ try:
                 "result", 1, movies=[dict(MOVIE, genres=None)], message="bad"
             ),
             "bad interpretation": result(interpretation={}),
+            "bad runtime operator": result(
+                interpretation=dict(PARSED, runtime_operator="gt")
+            ),
+            "missing runtime operator": result(
+                interpretation=dict(PARSED, runtime_operator=None)
+            ),
             "bad suggestions": result(suggestions=[{}]),
             "duplicate IDs": frame("result", 1, movies=[MOVIE, MOVIE], message="bad"),
             "after complete": valid + frame("status", 3, stage="retrieval"),
@@ -175,6 +218,27 @@ try:
         }
         for name, stream in invalid_streams.items():
             rejected(name, stream)
+
+        for name, fields in (
+            (
+                "invalid operator",
+                {"interpretation": dict(PARSED, runtime_operator="gt")},
+            ),
+            (
+                "unpaired operator",
+                {"interpretation": dict(PARSED, runtime_operator=None)},
+            ),
+            (
+                "suggestion missing request",
+                {
+                    "suggestions": [
+                        {"label": "Longer", "candidate_count": 1, "selection": "opaque"}
+                    ]
+                },
+            ),
+        ):
+            outcomes = rejected(name, result(**fields) + frame("complete", 2))
+            assert not any(o["type"] == "result" for o in outcomes), outcomes
 
         for terminal_event in ("explanation_complete", "explanation_error"):
             for update in (

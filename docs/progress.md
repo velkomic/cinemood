@@ -24,10 +24,40 @@
   PostgreSQL or live models in the focused suite.
 - Affected server integration: **36 passed in 83.91s**, using disposable real
   PostgreSQL/pgvector on port 55434 and deterministic external provider HTTP.
-  Focused session, retained UX and shared-card browser suites pass. Combined
-  stream browser, independent review and final full-suite evidence follow below.
+  All four browser suites pass on the combined implementation: focused session,
+  retained UX, shared-card and real-database stream browser. Final full-suite
+  evidence is recorded below.
   Added pagehide cancellation/restored-page recovery and submit/Cancel/aria-busy
   assertions to the retained stream suite. Ruff lint/format and strict mypy pass.
+- Independent code-review skill against `c07d4dc`: Standards had no required
+  violations and one optional forwarding-wrapper smell; removed the wrapper.
+  Spec identified missing runtime-operator/presence and suggestion/request-context
+  validation. Public-controller regression failed before the fix and passes now;
+  malformed results are rejected before publication even with valid completion.
+  Both independent rechecks report **zero remaining findings**. Strengthened
+  overflow evidence so complete oversized frames have otherwise valid endings,
+  and incomplete overflow fails while the HTTP peer remains open. The full
+  focused suite passes after these changes.
+- Final static gate passes: Ruff lint/format (67 Python files), strict mypy
+  (15 application files), all four JavaScript syntax checks and whitespace.
+  Browser commands: `.venv/bin/python tests/browser_session_smoke.py`,
+  `.venv/bin/python tests/browser_ux_smoke.py`,
+  `.venv/bin/python tests/browser_cards_smoke.py`, and
+  `PYTHONPATH=. TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55434/postgres .venv/bin/python tests/browser_stream_smoke.py`.
+- Final full suite, run once after review fixes: **201 passed in 372.43s
+  (6m 12s)** with
+  `TEST_DATABASE_URL=postgresql://cinemood:cinemood@127.0.0.1:55434/postgres .venv/bin/python -m pytest -q --tb=short`.
+  Actual runtime: PostgreSQL **16.14**, pgvector **0.8.2**, using the pinned
+  `pgvector/pgvector:0.8.2-pg16` image. Log:
+  `/tmp/cinemood-issue9-full-tests.log` (session artifact). Inspected fresh
+  desktop/mobile stream captures: layout, card fallback, Save/Details and safe
+  HTML-like text remain intact. Deterministic fixtures establish behavior, not
+  live relevance, provider latency, grounding quality or cost.
+- Implementation commit: `bec6d2f`; the follow-up commit contains reviewed
+  validation fixes, strengthened regressions and this final evidence. Removed
+  `cinemood-issue9-tests` and its anonymous storage after verification. The
+  retained application/catalog/snapshot volumes were untouched. #9 implementation
+  and combined #8/#9 verification are complete locally.
 - Work remains local; no paid calls, tracker mutation, remote push, hosted CI or
   retained-app rebuild is claimed. Owner acceptance/issue closure remain pending.
 
