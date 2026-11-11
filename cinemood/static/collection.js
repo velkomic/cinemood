@@ -1,7 +1,13 @@
 const savedMovieIds = new Set();
+const pendingCollectionMovies = new Set();
+const collectionErrors = new Map();
+const collectionGroups = new Map();
 const collectionResults = document.querySelector('#collection-results');
 const collectionStatus = document.querySelector('#collection-status');
 const collectionRetry = document.querySelector('#collection-retry');
+let mutationRevision = 0;
+let loadSequence = 0;
+let refreshNeeded = false;
 
 async function collectionRequest(path = '', method = 'GET') {
   const response = await fetch(`/api/collection${path}`, {
@@ -20,92 +26,75 @@ function collectionError(error) {
     ? 'Unable to reach your collection. Please try again.' : error.message;
 }
 
-function refreshCollectionActions() {
-  for (const action of document.querySelectorAll('.save-action')) {
-    const saved = savedMovieIds.has(Number(action.closest('.movie').dataset.movieId));
-    const removing = action.dataset.removing === 'true';
-    const pending = action.dataset.pending === 'true';
-    const label = pending ? (removing ? 'Removing…' : 'Saving…') : removing ? 'Remove' : saved ? 'Saved' : 'Save';
-    action.querySelector('span').textContent = label;
-    const kind = saved && !removing ? 'check' : 'bookmark';
-    if (action.dataset.icon !== kind) {
-      action.querySelector('svg').replaceWith(lineIcon(kind));
-      action.dataset.icon = kind;
+function readCollectionState(movieId) {
+  return {saved: savedMovieIds.has(movieId), pending: pendingCollectionMovies.has(movieId), error: collectionErrors.get(movieId) || ''};
+}
+
+function publishCollectionState(movieId) {
+  for (const group of collectionGroups.keys()) group.setCollectionState(movieId, readCollectionState(movieId));
+}
+
+function createCollectionCardGroup(container, context, focusFallback) {
+  const group = createMovieCardGroup({
+    container, context, focusFallback,
+    readCollectionState, onCollectionAction: mutateCollection,
+    onDispose: () => collectionGroups.delete(group),
+  });
+  collectionGroups.set(group, context);
+  return group;
+}
+
+const collectionGroup = collectionResults
+  ? createCollectionCardGroup(collectionResults, 'collection', collectionStatus) : null;
+if (collectionStatus) collectionStatus.tabIndex = -1;
+
+async function mutateCollection(movieId, removing) {
+  if (pendingCollectionMovies.has(movieId)) return;
+  pendingCollectionMovies.add(movieId);
+  ++mutationRevision;
+  collectionErrors.delete(movieId);
+  publishCollectionState(movieId);
+  try {
+    const bootstrap = collectionReady;
+    if (!await bootstrap && collectionReady === bootstrap) collectionReady = loadCollection();
+    if (!await collectionReady) throw new Error('Unable to reach your collection. Please try again.');
+    await collectionRequest(`/${movieId}`, removing ? 'DELETE' : 'PUT');
+    if (removing) {
+      savedMovieIds.delete(movieId);
+      for (const [group, context] of collectionGroups) {
+        if (context === 'collection') group.remove(movieId);
+      }
+      if (collectionGroup) updateCollectionCount();
+    } else {
+      savedMovieIds.add(movieId);
     }
-    action.classList.toggle('is-saved', saved && !removing);
-    action.classList.toggle('is-loading', pending);
-    action.setAttribute('aria-label', pending ? label : removing ? 'Remove' : saved ? 'Saved to collection' : 'Save to collection');
-    action.setAttribute('aria-pressed', String(saved && !removing));
-    action.setAttribute('aria-busy', String(pending));
-    action.disabled = pending || (!removing && saved);
+  } catch (error) {
+    collectionErrors.set(movieId, collectionError(error));
+  } finally {
+    pendingCollectionMovies.delete(movieId);
+    publishCollectionState(movieId);
+    refreshCollectionIfNeeded();
   }
 }
 
-function addCollectionAction(card, movie, removing = false) {
-  const action = document.createElement('button');
-  action.type = 'button';
-  action.className = removing ? 'save-action is-remove' : 'save-action';
-  action.dataset.removing = String(removing);
-  action.title = removing ? `Remove ${movie.title} from My collection` : `Save ${movie.title} to My collection`;
-  const feedback = document.createElement('p');
-  feedback.className = 'save-feedback';
-  feedback.setAttribute('role', 'status');
-  feedback.setAttribute('aria-live', 'polite');
-  action.addEventListener('click', async () => {
-    action.dataset.pending = 'true';
-    feedback.classList.remove('sr-only');
-    feedback.textContent = '';
-    refreshCollectionActions();
-    try {
-      const pending = collectionReady;
-      if (!await pending && collectionReady === pending) collectionReady = loadCollection();
-      if (!await collectionReady) throw new Error('Unable to reach your collection. Please try again.');
-      await collectionRequest(`/${movie.id}`, removing ? 'DELETE' : 'PUT');
-      if (removing) {
-        savedMovieIds.delete(movie.id);
-        if (selectedMovieId === movie.id) closeMovieDetails(false);
-        const nextFocus = card.nextElementSibling?.querySelector('button') || card.previousElementSibling?.querySelector('button');
-        card.remove();
-        if (nextFocus) nextFocus.focus();
-        else {
-          collectionStatus.tabIndex = -1;
-          collectionStatus.focus();
-        }
-        updateCollectionCount();
-      } else {
-        savedMovieIds.add(movie.id);
-        feedback.classList.add('sr-only');
-        feedback.textContent = 'Saved to My collection.';
-      }
-    } catch (error) {
-      feedback.textContent = collectionError(error);
-    } finally {
-      action.dataset.pending = 'false';
-      refreshCollectionActions();
-    }
-  });
-  card.querySelector('.movie-actions').prepend(action);
-  card.append(feedback);
-  // Called before attachment; initialize this control, then sync attached copies.
-  const label = document.createElement('span');
-  label.textContent = removing ? 'Remove' : savedMovieIds.has(movie.id) ? 'Saved' : 'Save';
-  action.dataset.icon = savedMovieIds.has(movie.id) && !removing ? 'check' : 'bookmark';
-  action.append(lineIcon(action.dataset.icon), label);
-  action.setAttribute('aria-label', removing ? 'Remove' : savedMovieIds.has(movie.id) ? 'Saved to collection' : 'Save to collection');
-  action.disabled = !removing && savedMovieIds.has(movie.id);
-  action.classList.toggle('is-saved', !removing && savedMovieIds.has(movie.id));
-  action.setAttribute('aria-pressed', String(!removing && savedMovieIds.has(movie.id)));
-  collectionReady.then(refreshCollectionActions);
-}
-
 function updateCollectionCount() {
-  if (collectionResults) collectionResults.dataset.count = String(savedMovieIds.size);
+  collectionResults.dataset.count = String(savedMovieIds.size);
   collectionStatus.textContent = savedMovieIds.size
     ? `${savedMovieIds.size} saved ${savedMovieIds.size === 1 ? 'movie' : 'movies'}.`
     : 'Your collection is empty. Discover a movie and save it here.';
 }
 
+function refreshCollectionIfNeeded() {
+  if (refreshNeeded && !pendingCollectionMovies.size) {
+    refreshNeeded = false;
+    collectionReady = loadCollection();
+  }
+}
+
 async function loadCollection() {
+  const sequence = ++loadSequence;
+  const revision = mutationRevision;
+  const startedWithMutation = pendingCollectionMovies.size > 0;
   if (collectionResults) {
     collectionStatus.textContent = 'Loading your collection…';
     collectionResults.setAttribute('aria-busy', 'true');
@@ -113,36 +102,38 @@ async function loadCollection() {
   }
   try {
     if (!navigator.locks) throw new Error('Collections need a current browser and HTTPS, or localhost for the local demo.');
-    // Cookie issuance must finish before another tab sends its initial GET.
+    // Serialize identity issuance across tabs; never hold the lock for mutations.
     const data = await navigator.locks.request('cinemood-collection-bootstrap', () => collectionRequest());
+    if (sequence !== loadSequence) return true;
+    // A GET snapshot cannot establish ordering with any overlapping mutation.
+    if (startedWithMutation || revision !== mutationRevision) {
+      refreshNeeded = true;
+      return true;
+    }
+    refreshNeeded = false;
+    const changed = new Set([...savedMovieIds, ...data.movies.map(movie => movie.id)]);
     savedMovieIds.clear();
     for (const movie of data.movies) savedMovieIds.add(movie.id);
-    if (collectionResults) {
-      if (selectedCard?.closest('#collection-results')) closeMovieDetails(false);
-      collectionResults.replaceChildren();
-      for (const movie of data.movies) {
-        const card = catalogCard(movie);
-        addCollectionAction(card, movie, true);
-        collectionResults.append(card);
-      }
-      updateCollectionCount();
-    }
-    refreshCollectionActions();
+    collectionGroup?.replace(data.movies);
+    if (collectionGroup) updateCollectionCount();
+    for (const movieId of changed) publishCollectionState(movieId);
     return true;
   } catch (error) {
-    if (collectionResults) {
+    if (sequence === loadSequence && collectionResults) {
       collectionStatus.textContent = collectionError(error);
       collectionRetry.hidden = false;
     }
     return false;
   } finally {
-    collectionResults?.setAttribute('aria-busy', 'false');
+    if (sequence === loadSequence) {
+      collectionResults?.setAttribute('aria-busy', 'false');
+      refreshCollectionIfNeeded();
+    }
   }
 }
 
 let collectionReady = loadCollection();
 collectionRetry?.addEventListener('click', () => { collectionReady = loadCollection(); });
-
 window.addEventListener('pageshow', (event) => {
   if (event.persisted) collectionReady = loadCollection();
 });

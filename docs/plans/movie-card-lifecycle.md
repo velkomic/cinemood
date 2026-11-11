@@ -2,8 +2,9 @@
 
 Status: accepted on 2026-11-11. The owner confirmed shared understanding of
 Q1–Q11, including the concurrent-work handoff, and authorized documentation and
-tracker publication with #8 marked `ready-for-agent`. Implementation has not
-started. #9's internal session design remains a separate review.
+tracker publication with #8 marked `ready-for-agent`. #8 implementation and
+verification are recorded in `../progress.md`. #9's internal session design
+remains a separate review.
 
 ## Accepted decisions
 
@@ -138,3 +139,28 @@ no additional CineMood context. Read-only inspection confirmed callers insert
 nodes using `.movie-actions`, consult shared selection globals and manually
 coordinate cleanup. Async collection callbacks can outlive their displayed card;
 that is an identified scenario to specify, not a reproduced bug claim.
+
+
+## Implemented JavaScript interface
+
+`createMovieCardGroup({container, context, onCollectionAction,
+readCollectionState, focusFallback, onDispose})` in `ui.js` implements the agreed
+contract. `context` is `spotlight`, `recommendations` or `collection`.
+`onCollectionAction(movieId, removing)` receives identity and intent only;
+`readCollectionState(movieId)` supplies `{saved, pending, error}` for initial
+presentation. The optional `onDispose` releases registry membership.
+
+- `replace(movies)` returns `(movieId, {phase, text, message}) => void` for that
+  display generation. Phases remain `pending`, `tentative`, `complete`,
+  `unavailable`; supplied text replaces prior text through safe DOM text content.
+- `setCollectionState(movieId, {saved, pending, error})` updates a current copy.
+- `remove(movieId)` clears only that displayed card and handles focus if it still
+  contains the active element; `dispose()` clears the group and unregisters it.
+- Removal/replacement/disposal release card listeners. Replacement/disposal
+  invalidate old explanation updaters; updates to removed IDs do nothing.
+
+`createCollectionCardGroup(container, context, focusFallback)` in `collection.js`
+registers the group with collection projections and mutation outcomes. Discover
+uses this factory for spotlight and recommendation cards. Callers provide a
+connected, focusable stable fallback (request input or status); they never inspect
+card internals. Stream accumulation/validation remains in Discover until #9.

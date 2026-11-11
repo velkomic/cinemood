@@ -1,5 +1,39 @@
 # Progress
 
+## Shared movie-card lifecycle (#8) — 2026-11-11
+
+- Refetched the complete ready-for-agent issue and comments through GitHub MCP;
+  no blockers or additional Cupcake context. Started from the agreed `ff22736`
+  documentation handoff on the current `main` branch. Implemented only #8;
+  #9 session redesign remains separate.
+- `ui.js` now owns card markup, explanation/action presentation, page-wide
+  displayed-card Details selection, focus and disposal. `createMovieCardGroup`
+  exposes replacement, generation-bound explanation updates, collection state,
+  removal and disposal without returning DOM nodes. Cards abort their event
+  listeners on disposal, including late poster callbacks.
+- Collection owns membership, per-movie pending/error state, one mutation per
+  movie and active-group publication. Mutations survive replacement/disposal.
+  Latest-load sequence plus mutation revision reject overlapping snapshots;
+  deferred reloads run after pending mutations settle. Web Locks identity
+  bootstrap and existing anonymous collection HTTP/SQL contracts are preserved.
+  No backend, SQL, schema or infrastructure change was needed.
+- TDD used the accepted real-browser DOM/controlled-HTTP seam. Observed failures
+  for the absent group interface, disposed poster callback, pending-removal
+  focus loss and disabled Shuffle fallback before their fixes. Focused browser
+  checks now cover duplicate appearances, single Details selection, safe text,
+  stale explanation updates, disposal, next/previous/empty focus, synchronized
+  pending/error/retry, pending Save/Remove across replacement/disposal,
+  overlapping reloads, mutation overlap and settled deferred refreshes.
+- `tests/browser_cards_smoke.py` and both retained browser suites pass, including
+  existing desktop/mobile appearance, fallback, motion, accessibility, stream
+  validation/cancellation and anonymous-identity flow. Collection REST integration:
+  **21 passed in 23.91s** on disposable PostgreSQL 16 / pgvector 0.8.2 (55434).
+  Ruff lint/format, strict mypy and all three JavaScript syntax checks pass.
+- Full-suite and independent Standards/Spec review results will be recorded
+  after execution. No live provider calls, retained-app rebuild, remote push,
+  tracker mutation, hosted CI result or paid infrastructure is claimed. The
+  combined #8/#9 integration gate remains required when #9 is implemented.
+
 ## Movie-card design interview — 2026-11-11
 
 - Final owner confirmation received for Q1–Q11. Published the full accepted

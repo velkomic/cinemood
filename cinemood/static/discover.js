@@ -8,6 +8,10 @@ const suggestions = document.querySelector('#suggestions');
 const preview = document.querySelector('#catalog-preview');
 const resultHeading = document.querySelector('#results-heading');
 const resultCount = document.querySelector('#result-count');
+const recommendationCards = createCollectionCardGroup(results, 'recommendations', requestInput);
+const previewStatus = document.querySelector('#preview-status');
+previewStatus.tabIndex = -1;
+const spotlightCards = createCollectionCardGroup(document.querySelector('#preview-track'), 'spotlight', previewStatus);
 
 function paragraph(text) {
   const element = document.createElement('p');
@@ -89,8 +93,6 @@ cancelButton.addEventListener('click', () => activeController?.abort());
 window.addEventListener('pagehide', () => activeController?.abort());
 
 function showResult(data, explanations) {
-  closeMovieDetails(false);
-  results.replaceChildren();
   interpretation.replaceChildren();
   interpretation.hidden = true;
   preview.hidden = true;
@@ -106,20 +108,11 @@ function showResult(data, explanations) {
     option.addEventListener('click', () => search(data.original_request, suggestion.selection));
     suggestions.append(option);
   }
-  for (const movie of data.movies) {
-    const card = catalogCard(movie);
-    const explanation = paragraph('Generating explanation…');
-    explanation.className = 'explanation';
-    const text = paragraph('');
-    text.className = 'explanation-text';
-    card.insertBefore(explanation, card.querySelector('.movie-actions'));
-    card.insertBefore(text, card.querySelector('.movie-actions'));
-    addCollectionAction(card, movie);
-    results.append(card);
-    explanations.set(movie.id, { label: explanation, text, complete: false });
-  }
+  const updateExplanation = recommendationCards.replace(data.movies);
+  for (const movie of data.movies) explanations.set(movie.id, {text: '', complete: false});
   results.classList.add('is-replaced');
   status.textContent = data.message;
+  return updateExplanation;
 }
 
 // Streaming UTF-8 decoder and frame buffer survive arbitrary network boundaries.
@@ -171,13 +164,14 @@ async function search(request, selection = null) {
   status.classList.remove('sr-only');
   status.textContent = 'Starting search…';
   const explanations = new Map();
+  let updateExplanation = () => {};
   let resultMessage = '';
   let hasMatches = false;
   const discardTentative = () => {
-    for (const item of explanations.values()) {
+    for (const [movieId, item] of explanations) {
       if (!item.complete) {
-        item.text.textContent = '';
-        item.label.textContent = 'Explanation unavailable. Catalog details are still available.';
+        item.text = '';
+        updateExplanation(movieId, {phase: 'unavailable'});
       }
     }
   };
@@ -198,21 +192,21 @@ async function search(request, selection = null) {
       } else if (event === 'result') {
         resultMessage = data.message;
         hasMatches = data.movies.length > 0;
-        showResult(data, explanations);
+        explanations.clear();
+        updateExplanation = showResult(data, explanations);
       } else if (event === 'explanation_delta' || event === 'explanation_complete' || event === 'explanation_error') {
         const item = explanations.get(data.movie_id);
         if (!item || item.complete) throw new Error('Invalid explanation identity.');
         if (event === 'explanation_delta') {
-          item.label.textContent = 'Generating explanation (not yet validated)…';
-          item.text.textContent += data.text;
+          item.text += data.text;
+          updateExplanation(data.movie_id, {phase: 'tentative', text: item.text});
         } else if (event === 'explanation_complete') {
           item.complete = true;
-          item.label.textContent = 'Why this may fit';
-          item.label.classList.add('is-complete');
-          item.text.textContent = data.text;
+          item.text = data.text;
+          updateExplanation(data.movie_id, {phase: 'complete', text: item.text});
         } else {
-          item.text.textContent = '';
-          item.label.textContent = data.message;
+          item.text = '';
+          updateExplanation(data.movie_id, {phase: 'unavailable', message: data.message});
         }
       } else if (event === 'complete') {
         discardTentative();
@@ -253,7 +247,6 @@ async function loadPreview() {
   previewController?.abort();
   const controller = new AbortController();
   previewController = controller;
-  const previewStatus = document.querySelector('#preview-status');
   const track = document.querySelector('#preview-track');
   shuffleButton.disabled = true;
   shuffleButton.classList.add('is-loading');
@@ -267,18 +260,11 @@ async function loadPreview() {
     if (!response.ok) throw new Error('Preview unavailable');
     const data = await response.json();
     if (controller !== previewController) return;
-    if (selectedCard?.closest('#preview-track')) closeMovieDetails(false);
-    const cards = data.movies.map(movie => {
-      const card = catalogCard(movie);
-      card.classList.add('preview-film');
-      addCollectionAction(card, movie);
-      return card;
-    });
-    track.replaceChildren(...cards);
+    spotlightCards.replace(data.movies);
     previewIds = data.movies.map(movie => movie.id);
     try { sessionStorage.setItem('cinemood:spotlight', JSON.stringify(previewIds)); } catch { /* Optional storage. */ }
     shuffleButton.disabled = !data.has_more;
-    previewStatus.textContent = !cards.length ? 'The catalog is empty. Movies will appear here after loading.'
+    previewStatus.textContent = !data.movies.length ? 'The catalog is empty. Movies will appear here after loading.'
       : data.has_more ? '' : 'You’re seeing all the films currently in this catalog.';
   } catch (error) {
     if (controller !== previewController) return;

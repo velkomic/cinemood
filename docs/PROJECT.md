@@ -52,6 +52,16 @@ Additional batches and contextual follow-ups remain separate specification work
 in `plans/frontend-redesign-spec-work.md`; no such search extension is implemented
 or published as a ticket. This work does not authorize T6 paid provisioning.
 
+## Shared movie-card lifecycle implementation — 2026-11-11
+
+Issue #8 now uses shared card groups in spotlight, recommendations and collection.
+Card markup, explanation/action presentation, Details selection and focus cleanup
+are private to the card module. Collection retains requests, anonymous bootstrap,
+membership and load/mutation ordering. The accepted contract remains in
+`plans/movie-card-lifecycle.md`; executed checks and remaining verification are
+recorded in `progress.md`. #9's session design and combined integration remain
+separate work.
+
 ## Planning workflow
 
 The owner requested two architecture-review follow-ups for later work on
