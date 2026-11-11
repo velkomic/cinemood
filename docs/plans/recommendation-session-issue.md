@@ -1,8 +1,7 @@
 ## Status and intent
 
-Design decisions Q1–Q10 accepted on 2026-11-11. This draft awaits final owner
-confirmation before publication as ready-for-agent. Implementation is a later
-session. Related: #8 (implemented, owner-accepted and closed). No open issue
+Design decisions Q1–Q10 and final shared understanding confirmed by the owner
+on 2026-11-11; ready-for-agent. Implementation is a later session. Related: #8 (implemented, owner-accepted and closed). No open issue
 blocker; neither follow-up blocks the AWS demonstration #7.
 
 ## Problem
@@ -149,7 +148,7 @@ rules back into the page; extracting only the decoder is insufficient.
 
 ## Acceptance criteria
 
-- [x] Owner reviewed Q1–Q10, ownership, public seam, failure semantics and concurrent-work gate (final shared-understanding confirmation precedes publication).
+- [x] Owner reviewed Q1–Q10, ownership, public seam, failure semantics and concurrent-work gate (final shared understanding confirmed).
 - [ ] One session owner controls HTTP, framing, identities, lifecycle and explanation validity; Discover only renders outcomes through #8's card interface.
 - [ ] Implement start/cancel/dispose and presentation outcomes, one active run, 80-second timeout, reader/timer cleanup and safe cancellation/disposal/retry.
 - [ ] Preserve prior display until result, atomic replacement including empty results, authoritative completion and completed-text/card retention on interruption.
@@ -161,5 +160,5 @@ rules back into the page; extracting only the decoder is insufficient.
 
 Before implementation read docs/PROJECT.md, docs/progress.md,
 docs/ARCHITECTURE.md, ADR-0001, docs/plans/movie-card-lifecycle.md and
- docs/plans/recommendation-session.md. No implementation or push is authorized
+docs/plans/recommendation-session.md. No implementation or push is authorized
 by completing this design review.

@@ -1,8 +1,8 @@
 # Browser recommendation-session state (#9)
 
-Status: Q1–Q10 accepted on 2026-11-11; no open design branches remain.
-Final shared-understanding confirmation is pending;
-#9 is not ready-for-agent and implementation has not started.
+Status: accepted on 2026-11-11. The owner confirmed shared understanding of
+Q1–Q10 and authorized publication as ready-for-agent. No open design branches
+remain. Implementation has not started.
 
 ## Accepted decisions
 
@@ -138,12 +138,17 @@ no new domain term is needed in GLOSSARY.md. This plan records the decisions.
 Deleting the session module should force protocol, interruption and tentative-text
 rules back into the page; extracting only the decoder is insufficient.
 
-## Evidence and publication state
+## Evidence and publication authorization
 
-Refreshed GitHub #9 and its empty comments after Q1–Q10 were answered. It remains
-open with needs-triage. Cupcake returned no additional CineMood context earlier
+Refreshed GitHub #9 and its empty comments after Q1–Q10 were answered. It was
+open with needs-triage before publication. Cupcake returned no additional CineMood context earlier
 in the interview. Read-only inspection verified the existing decoding, lifecycle,
 card integration and permissive-order gaps; no #9 implementation or runtime
-verification has occurred. The ready-for-agent issue draft is
-recommendation-session-issue.md. Publish it only after final shared-understanding
-confirmation; mark the design criterion complete and implementation criteria open.
+verification has occurred. The owner then confirmed shared understanding and authorized ready-for-agent
+publication. recommendation-session-issue.md contains the accepted tracker body;
+only the design criterion is complete. Implementation criteria remain open.
+
+
+Publication verified: GitHub #9 is open with ready-for-agent and the full accepted
+contract. Use the final publication-record commit descending from 1352ac3 as the
+common handoff (or the same later descendant on all work branches).

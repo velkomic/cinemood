@@ -802,3 +802,24 @@ The repository documentation and published ticket are the durable context; the p
 - Concurrent work is session module plus focused public-interface tests from one
   accepted handoff; #8 is already integrated. One owner integrates shared page
   changes and runs all three browser suites plus affected integration/static checks.
+
+
+## #9 accepted and published ready-for-agent — 2026-11-11
+
+- Owner confirmed final shared understanding and explicitly authorized publishing
+  the accepted design and ready-for-agent label. Refetched #9 and its empty
+  comments, verified repository identity as velkomic/cinemood, replaced the full
+  issue body with the accepted contract and replaced needs-triage with
+  ready-for-agent. GitHub returned open with ready-for-agent.
+- Published ticket: https://github.com/velkomic/cinemood/issues/9.
+  Source contract: plans/recommendation-session.md. Tracker body snapshot:
+  plans/recommendation-session-issue.md. Q1–Q10 and the concurrent module/test
+  plan are accepted; implementation acceptance criteria remain unchecked.
+- #8 is owner-accepted and closed. Start implementation from the same final
+  accepted documentation handoff descending from 1352ac3 (including ea62bb1,
+  #8 and current MVP refinements). Coordinate the concrete callback signature
+  before parallel module/test work; one owner integrates shared page changes.
+- Whitespace verification passes for this documentation-only handoff. No #9
+  implementation, runtime test pass, paid calls, infrastructure or push claimed.
+  Earlier runtime evidence remains historical; combined verification is required
+  when #9 is implemented.

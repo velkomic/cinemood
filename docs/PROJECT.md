@@ -73,8 +73,7 @@ The owner completed #8's design review and approved its `ready-for-agent`
 publication. The accepted contract in `plans/movie-card-lifecycle.md` covers
 shared card presentation/lifecycle, page-wide Details selection, collection
 ordering safeguards, verification and concurrent #8/#9 module development with
-sequential page integration. #9 remains `needs-triage` pending its own session
-interface review. The frontend baseline is `8bf42e1`; both branches must use the
+sequential page integration. #9's session design is now accepted; see `plans/recommendation-session.md`. The frontend baseline is `8bf42e1`; both branches must use the
 same documentation handoff commit above it. These follow-ups do not expand MVP
 product scope or block T6. Implementation and push are outside this design task.
 
@@ -137,11 +136,11 @@ See `constraints.md` for semantics and `progress.md` for executed evidence.
 
 ## Recommendation-session design review — 2026-11-11
 
-The owner accepted Q1–Q3 in `plans/recommendation-session.md`: prioritize the
+The owner accepted Q1–Q10 in `plans/recommendation-session.md`: prioritize the
 working MVP; preserve current behavior while putting HTTP stream, protocol,
 explanation validity and lifecycle ownership in one session module. Discover
 retains DOM/form/interpretation/suggestion presentation. Later features extend
-the MVP separately. #8 is accepted and closed; #9 remains under design review.
+the MVP separately. #8 is accepted and closed; #9 design is accepted for agent implementation.
 Use a new common committed handoff including #8 and the current approved
 refinements. Independent module/test work may proceed concurrently after design
 acceptance, with one owner for shared page integration and combined verification.
@@ -151,5 +150,5 @@ This supersedes the earlier proposal to implement #8 and #9 concurrently.
 #9 Q1–Q10 are now accepted, with explicit malformed-protocol fixes alongside
 preserved MVP behavior. The complete session contract and tracker draft are in
 `plans/recommendation-session.md` and `plans/recommendation-session-issue.md`.
-Final shared-understanding confirmation and ready-for-agent publication remain
-pending; there is no #9 implementation claim.
+Final shared understanding is confirmed. The full accepted contract is published
+to GitHub #9 with ready-for-agent; there is no #9 implementation claim.
