@@ -74,3 +74,45 @@ the request. Five films can therefore require five explanation calls, rather tha
 three. Provider latency can still cause explanation fallback while catalog facts
 remain visible. Deterministic tests establish behavior, not live relevance or a
 new latency/cost measurement.
+
+## Browser session ownership (#9)
+
+`recommendation-session.js` exposes `createRecommendationSession(onOutcome)`.
+One controller per Discover page provides `start(request, selection = null)`,
+`cancel()` and `dispose()`. `start` settles after reader/timer cleanup; starts
+while busy or after disposal are ignored. The client timeout remains 80 seconds.
+Cancel/pagehide abort the current run; pagehide does not dispose a restorable
+page. Disposal aborts and suppresses all subsequent presentation callbacks.
+
+The callback receives `{type: 'busy', busy}`, `{type: 'status', message, quiet}`,
+`{type: 'result', result}`, or `{type: 'explanation', movieId, phase, text, message}`.
+Explanation text is accumulated/replaced by the controller; message is optional.
+Discover retains form, interpretation, suggestions and DOM rendering, passing
+explanation outcomes through the generation-bound card updater from #8. It owns
+no raw frames, decoding, cancellation controller or explanation-validity map.
+
+A new search retains the previous display until one validated result replaces it,
+including an empty result. Failures before result leave that display intact.
+Interruption after result retains catalog cards and completed explanations while
+discarding unfinished text. Completion text replaces tentative text. Server-side
+evidence validation remains authoritative; browser checks establish protocol and
+identity validity, not semantic grounding.
+
+The browser requires a stable nonempty string request ID, consecutive integer
+sequences starting at one, unique positive integer movie IDs and a single result
+before complete. Explanation events require a known unfinished movie; both
+explanation_complete and explanation_error end updates for that movie. Error may
+terminate before or after result. Unknown events, malformed consumed fields,
+repeated result, premature complete, post-terminal events, malformed UTF-8,
+truncated EOF and non-whitespace trailing data fail safely. Whitespace after the
+terminal event is allowed. Successful completion status is published only after
+valid EOF. Frames are limited to 65,536 JavaScript string characters excluding
+the LF-LF delimiter, for complete and incomplete frames independently of chunk
+size. A chunk containing many small valid frames is allowed. These ordering and
+frame-size checks deliberately tighten malformed-stream handling; valid server
+payloads and HTTP/selection contracts are unchanged.
+
+Focused verification: `.venv/bin/python tests/browser_session_smoke.py` uses
+Chromium and controlled local HTTP streams with no database or provider calls.
+It complements the retained stream, UX and shared-card browser suites and real
+PostgreSQL server integration checks.

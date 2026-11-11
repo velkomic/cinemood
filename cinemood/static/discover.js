@@ -86,12 +86,30 @@ form.addEventListener('submit', async (event) => {
   await search(request);
 });
 
-let activeController = null;
 const cancelButton = document.querySelector('#cancel');
-cancelButton.addEventListener('click', () => activeController?.abort());
-window.addEventListener('pagehide', () => activeController?.abort());
+let updateExplanation = () => {};
+const recommendationSession = createRecommendationSession(outcome => {
+  if (outcome.type === 'result') {
+    updateExplanation = showResult(outcome.result);
+  } else if (outcome.type === 'explanation') {
+    updateExplanation(outcome.movieId, outcome);
+  } else if (outcome.type === 'status') {
+    status.textContent = outcome.message;
+    status.classList.toggle('sr-only', outcome.quiet);
+  } else if (outcome.type === 'busy') {
+    button.disabled = outcome.busy;
+    cancelButton.hidden = !outcome.busy;
+    results.setAttribute('aria-busy', String(outcome.busy));
+    if (outcome.busy) {
+      suggestions.replaceChildren();
+      document.body.classList.add('motion-paused');
+    }
+  }
+});
+cancelButton.addEventListener('click', () => recommendationSession.cancel());
+window.addEventListener('pagehide', () => recommendationSession.cancel());
 
-function showResult(data, explanations) {
+function showResult(data) {
   interpretation.replaceChildren();
   interpretation.hidden = true;
   spotlightCards.replace([]);
@@ -109,129 +127,13 @@ function showResult(data, explanations) {
     suggestions.append(option);
   }
   const updateExplanation = recommendationCards.replace(data.movies);
-  for (const movie of data.movies) explanations.set(movie.id, {text: '', complete: false});
   results.classList.add('is-replaced');
-  status.textContent = data.message;
   return updateExplanation;
 }
 
-// Streaming UTF-8 decoder and frame buffer survive arbitrary network boundaries.
-async function consumeEvents(response, onEvent) {
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder('utf-8', { fatal: true });
-  let buffer = '';
-  let terminal = false;
-  let sequence = 0;
-  let requestId = null;
-  try {
-    while (true) {
-      const { value, done } = await reader.read();
-      buffer += decoder.decode(value, { stream: !done });
-      let boundary;
-      while ((boundary = buffer.indexOf('\n\n')) !== -1) {
-        const frame = buffer.slice(0, boundary);
-        buffer = buffer.slice(boundary + 2);
-        const lines = frame.split('\n');
-        const event = lines.find(line => line.startsWith('event: '))?.slice(7);
-        const payload = lines.filter(line => line.startsWith('data: ')).map(line => line.slice(6)).join('\n');
-        const data = JSON.parse(payload);
-        if (terminal || data.sequence !== ++sequence || !data.request_id ||
-            (requestId !== null && requestId !== data.request_id)) throw new Error('Invalid recommendation stream.');
-        requestId = data.request_id;
-        terminal = event === 'complete' || event === 'error';
-        onEvent(event, data);
-      }
-      if (buffer.length > 65536) throw new Error('Invalid recommendation stream.');
-      if (done) break;
-    }
-    if (!terminal || buffer.trim()) throw new Error('Search interrupted. Please try again.');
-  } finally {
-    await reader.cancel().catch(() => {});
-    reader.releaseLock();
-  }
+function search(request, selection = null) {
+  return recommendationSession.start(request, selection);
 }
-
-async function search(request, selection = null) {
-  if (activeController) return;
-  const controller = new AbortController();
-  activeController = controller;
-  const timeout = setTimeout(() => controller.abort(new DOMException('Search took too long.', 'TimeoutError')), 80000);
-  button.disabled = true;
-  cancelButton.hidden = false;
-  suggestions.replaceChildren();
-  document.body.classList.add('motion-paused');
-  results.setAttribute('aria-busy', 'true');
-  status.classList.remove('sr-only');
-  status.textContent = 'Starting search…';
-  const explanations = new Map();
-  let updateExplanation = () => {};
-  let resultMessage = '';
-  let hasMatches = false;
-  const discardTentative = () => {
-    for (const [movieId, item] of explanations) {
-      if (!item.complete) {
-        item.text = '';
-        updateExplanation(movieId, {phase: 'unavailable'});
-      }
-    }
-  };
-  try {
-    const response = await fetch('/api/recommendations/stream', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request, selection }), signal: controller.signal,
-    });
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(typeof data.detail === 'string' ? data.detail : 'Use a request of 1–2,000 characters.');
-    }
-    if (!response.headers.get('content-type')?.startsWith('text/event-stream')) throw new Error('Invalid recommendation stream.');
-    await consumeEvents(response, (event, data) => {
-      if (event === 'status') {
-        const labels = { interpretation: 'Interpreting your request…', retrieval: 'Searching the catalog…', explanation: 'Explaining catalog matches…' };
-        status.textContent = labels[data.stage] || 'Searching…';
-      } else if (event === 'result') {
-        resultMessage = data.message;
-        hasMatches = data.movies.length > 0;
-        explanations.clear();
-        updateExplanation = showResult(data, explanations);
-      } else if (event === 'explanation_delta' || event === 'explanation_complete' || event === 'explanation_error') {
-        const item = explanations.get(data.movie_id);
-        if (!item || item.complete) throw new Error('Invalid explanation identity.');
-        if (event === 'explanation_delta') {
-          item.text += data.text;
-          updateExplanation(data.movie_id, {phase: 'tentative', text: item.text});
-        } else if (event === 'explanation_complete') {
-          item.complete = true;
-          item.text = data.text;
-          updateExplanation(data.movie_id, {phase: 'complete', text: item.text});
-        } else {
-          item.text = '';
-          updateExplanation(data.movie_id, {phase: 'unavailable', message: data.message});
-        }
-      } else if (event === 'complete') {
-        discardTentative();
-        status.textContent = resultMessage;
-        status.classList.toggle('sr-only', hasMatches);
-      } else if (event === 'error') {
-        throw new Error(data.message);
-      } else {
-        throw new Error('Unknown recommendation event.');
-      }
-    });
-  } catch (error) {
-    discardTentative();
-    status.textContent = controller.signal.aborted
-      ? (controller.signal.reason?.name === 'TimeoutError' ? 'Search took too long. Please try again.' : 'Search cancelled. Catalog details are still available.')
-      : error instanceof TypeError ? 'Unable to connect. Please try again.' : error.message;
-  } finally {
-    clearTimeout(timeout);
-    activeController = null;
-    button.disabled = false;
-    cancelButton.hidden = true;
-    results.setAttribute('aria-busy', 'false');
-  }
-}
-
 
 // Each homepage visit and explicit shuffle asks for a fresh, bounded selection.
 const shuffleButton = document.querySelector('#shuffle-preview');

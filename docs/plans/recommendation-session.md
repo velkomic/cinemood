@@ -2,7 +2,7 @@
 
 Status: accepted on 2026-11-11. The owner confirmed shared understanding of
 Q1–Q10 and authorized publication as ready-for-agent. No open design branches
-remain. Implementation has not started.
+remain. Implementation and verification are recorded in `../progress.md`.
 
 ## Accepted decisions
 

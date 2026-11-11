@@ -211,6 +211,8 @@ try:
             page.wait_for_function(
                 "!document.querySelector('#discover button').disabled"
             )
+            assert page.locator("#cancel").is_hidden()
+            assert page.locator("#results").get_attribute("aria-busy") == "false"
 
         search("quiet comfort")
         page.locator("#results article").first.wait_for()
@@ -271,6 +273,14 @@ try:
         page.locator(".request-context summary").click()
         page.get_by_role("button", name="Cancel search").click()
         finished()
+        # pagehide cancels without disposing, so a restored page can search again.
+        search("pagehide pending")
+        page.wait_for_function('document.querySelector("#cancel").hidden === false')
+        page.evaluate(
+            "dispatchEvent(new PageTransitionEvent('pagehide', {persisted: true}))"
+        )
+        finished()
+        assert page.locator("#results h2").all_text_contents() == original_cards
         for route in held:
             route.abort()
         page.unroute("**/api/recommendations/stream")

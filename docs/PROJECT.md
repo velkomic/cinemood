@@ -152,3 +152,12 @@ preserved MVP behavior. The complete session contract and tracker draft are in
 `plans/recommendation-session.md` and `plans/recommendation-session-issue.md`.
 Final shared understanding is confirmed. The full accepted contract is published
 to GitHub #9 with ready-for-agent; there is no #9 implementation claim.
+
+
+## Recommendation-session implementation (#9) — 2026-11-11
+
+The session controller now owns streaming transport, protocol validation,
+explanation accumulation/retention and cancellation. Discover renders outcomes
+through the shared card interface. Scope remains the accepted Q1–Q10 contract;
+SQL, server payloads, ranking and collection ownership are unchanged. Actual
+verification and remaining acceptance are recorded in `progress.md`.

@@ -1,5 +1,37 @@
 # Progress
 
+## Browser recommendation-session state (#9) — 2026-11-11
+
+- Refreshed full GitHub #9 and comments through MCP: open, ready-for-agent,
+  no blocker. Cupcake returned no additional context. Read AGENTS.md and its
+  referenced project, progress, domain, tracker, architecture, ADR, roadmap,
+  specification, milestone and accepted card/session plans. Started from the
+  common committed handoff `c07d4dc` on `main`, with a clean working tree.
+- One `createRecommendationSession(onOutcome)` owns HTTP/UTF-8 framing,
+  identities/order, accumulated explanation validity, abort/80-second timeout,
+  cleanup and disposal. Discover renders outcomes using #8's generation-bound
+  card updater, retaining the previous display until validated replacement.
+  Completed text survives interruption; unfinished text is discarded. No SQL,
+  backend, schema, ranking, collection-ownership or infrastructure changes.
+- TDD at the accepted public-controller/real-browser seam: initial missing-module
+  failure preceded implementation; terminal-whitespace regression failed before
+  its parser fix. The retained stream browser caught empty optional messages
+  suppressing default card labels; omitted messages now preserve those labels.
+  Focused Chromium checks pass fragmentation, per-frame exact/overflow bounds,
+  many frames per chunk, protocol/payload/identity failures, authoritative text,
+  completed-text retention, HTTP/network errors, cancel, busy starts, controlled
+  80-second timeout, disposal suppression and retry. No private-helper mocks,
+  PostgreSQL or live models in the focused suite.
+- Affected server integration: **36 passed in 83.91s**, using disposable real
+  PostgreSQL/pgvector on port 55434 and deterministic external provider HTTP.
+  Focused session, retained UX and shared-card browser suites pass. Combined
+  stream browser, independent review and final full-suite evidence follow below.
+  Added pagehide cancellation/restored-page recovery and submit/Cancel/aria-busy
+  assertions to the retained stream suite. Ruff lint/format and strict mypy pass.
+- Work remains local; no paid calls, tracker mutation, remote push, hosted CI or
+  retained-app rebuild is claimed. Owner acceptance/issue closure remain pending.
+
+
 ## Bounded interpretation and negative original languages — 2026-11-11
 
 - Owner requested a more explicit, capable extraction prompt and supplied a
