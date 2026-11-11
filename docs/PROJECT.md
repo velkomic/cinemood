@@ -146,3 +146,10 @@ Use a new common committed handoff including #8 and the current approved
 refinements. Independent module/test work may proceed concurrently after design
 acceptance, with one owner for shared page integration and combined verification.
 This supersedes the earlier proposal to implement #8 and #9 concurrently.
+
+
+#9 Q1–Q10 are now accepted, with explicit malformed-protocol fixes alongside
+preserved MVP behavior. The complete session contract and tracker draft are in
+`plans/recommendation-session.md` and `plans/recommendation-session-issue.md`.
+Final shared-understanding confirmation and ready-for-agent publication remain
+pending; there is no #9 implementation claim.

@@ -777,3 +777,28 @@ The repository documentation and published ticket are the durable context; the p
   Include design sidecar/surface, screenshot reference and extraction evaluation;
   machine-local hooks, consent and generated cache remain ignored. No new
   application implementation, provider calls, infrastructure or push occurred.
+
+
+## #9 interview, second round — 2026-11-11
+
+- Owner accepted Q4–Q7: per-page session controller, retained prior display until
+  result, completed-text preservation, one active run/80-second timeout,
+  disposal callback suppression, and explicit malformed-order/frame-bound fixes.
+  Recorded in plans/recommendation-session.md; implementation remains pending.
+- ea62bb1 commits existing approved refinements, #8 closure and Q1–Q3 records.
+  Static checks passed and working tree was clean afterward; no push occurred.
+  #9 still needs the remaining contract decisions and final confirmation before
+  ready-for-agent publication. No new application code or runtime tests here.
+
+
+## #9 design complete, awaiting final confirmation — 2026-11-11
+
+- Owner accepted Q8–Q10. All ten design questions are settled; the complete
+  contract and concrete tracker draft are in plans/recommendation-session.md
+  and plans/recommendation-session-issue.md. No open design branch remains.
+- Refetched #9 and comments: open, needs-triage, no comments. Publication and
+  ready-for-agent labeling await final shared-understanding confirmation required
+  by the invoked grilling skill. No #9 application changes or test pass claimed.
+- Concurrent work is session module plus focused public-interface tests from one
+  accepted handoff; #8 is already integrated. One owner integrates shared page
+  changes and runs all three browser suites plus affected integration/static checks.
